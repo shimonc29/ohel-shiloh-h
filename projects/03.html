@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מנוע המלצות מוזיקה ואנליסט אווירה עולמי</title>
+
+    <!-- Tailwind CSS Script CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Lucide Icons Library -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Google Fonts (Heebo & Rubik) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Rubik', 'Heebo', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-glow': 'pulseGlow 5s ease-in-out infinite alternate',
+                        'float': 'float 6s ease-in-out infinite',
+                        'spin-slow': 'spin 12s linear infinite',
+                    },
+                    keyframes: {
+                        pulseGlow: {
+                            '0%': { opacity: '0.4', transform: 'scale(1) rotate(0deg)' },
+                            '100%': { opacity: '0.85', transform: 'scale(1.15) rotate(10deg)' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Rubik', 'Heebo', sans-serif;
+            background-color: #080c14;
+            color: #f3f4f6;
+            overflow-x: hidden;
+            transition: background-color 1s ease;
+        }
+
+        .glass-panel {
+            background: rgba(18, 24, 38, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            transition: border-color 0.8s ease, box-shadow 0.8s ease;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+
+        .glass-input {
+            background: rgba(10, 16, 30, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+        }
+        .glass-input:focus {
+            border-color: rgba(129, 140, 248, 0.7);
+            box-shadow: 0 0 25px rgba(99, 102, 241, 0.25);
+        }
+
+        .bg-orb {
+            transition: background 2s cubic-bezier(0.4, 0, 0.2, 1), transform 2s ease-in-out;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(8, 12, 20, 0.8);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.18);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between relative selection:bg-indigo-500 selection:text-white">
+
+    <!-- Ambient Glowing Dynamic Background Orbs -->
+    <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div id="bg-orb-1" class="bg-orb absolute -top-40 -right-40 w-[500px] md:w-[700px] h-[500px] md:h-[700px] rounded-full bg-indigo-600/25 blur-[120px] animate-pulse-glow"></div>
+        <div id="bg-orb-2" class="bg-orb absolute top-1/3 -left-40 w-[450px] md:w-[650px] h-[450px] md:h-[650px] rounded-full bg-purple-600/20 blur-[120px] animate-pulse-glow" style="animation-delay: 2s;"></div>
+        <div id="bg-orb-3" class="bg-orb absolute -bottom-40 right-1/3 w-[500px] md:w-[750px] h-[500px] md:h-[750px] rounded-full bg-pink-600/20 blur-[130px] animate-pulse-glow" style="animation-delay: 1s;"></div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="relative z-10 max-w-4xl mx-auto px-4 py-8 w-full flex-grow flex flex-col justify-center">
+
+        <!-- Header -->
+        <header class="text-center mb-8 animate-float">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-card text-xs md:text-sm font-semibold text-indigo-300 mb-3 border border-indigo-500/30 shadow-lg shadow-indigo-500/10">
+                <i data-lucide="sparkles" class="w-4 h-4 text-indigo-400"></i>
+                <span>Vibe & World Events Analyst (Local Engine)</span>
+            </div>
+            <h1 class="text-3xl md:text-5xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-indigo-300 mb-3">
+                מנוע המלצות מוזיקה ואנליסט אווירה
+            </h1>
+            <p class="text-slate-400 text-sm md:text-base max-w-xl mx-auto leading-relaxed">
+                הזן תיאור אירוע, חדשות בעולם או תחושה אישית – המנוע המקומי ינתח את המצב, יתאים שיר מדויק, יעניק מסר מחזק ויצבע את האפליקציה באווירה המתאימה.
+            </p>
+        </header>
+
+        <!-- Input Section -->
+        <section class="glass-panel p-6 md:p-8 rounded-3xl shadow-2xl mb-8 border border-white/10" id="main-input-panel">
+            <form id="vibe-form" onsubmit="handleAnalyze(event)" class="space-y-6">
+                
+                <!-- Offline Dynamic Mode Badge -->
+                <div class="flex items-center justify-between bg-slate-900/60 p-3 px-4 rounded-2xl border border-indigo-500/20">
+                    <div class="flex items-center gap-2.5">
+                        <span class="relative flex h-3 w-3">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-3 w-3 bg-indigo-500"></span>
+                        </span>
+                        <span class="text-xs md:text-sm font-semibold text-slate-200">מנוע אנליטיזת אווירה מקומי (עובד ללא צורך ב-API)</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="event-input" class="block text-sm font-semibold text-slate-200 mb-2.5">
+                        מה קורה כרגע? (אירוע בעולם, חדשות אקטואליות או הרגשה אישית)
+                    </label>
+                    <div class="relative">
+                        <textarea 
+                            id="event-input" 
+                            rows="3" 
+                            required
+                            placeholder="למשל: מה קורה עכשיו בחדשות בעולם, אירועי ספורט מרכזיים כרגע, יום גשום, סערה פוליטית או בשורות טובות..."
+                            class="w-full glass-input rounded-2xl p-4 text-slate-100 placeholder-slate-500 text-sm md:text-base focus:outline-none transition-all duration-300 resize-none pr-4 pl-20"
+                        ></textarea>
+                        
+                        <!-- Actions inside Textarea (Mic & Clear) -->
+                        <div class="absolute left-3 top-4 flex items-center gap-1">
+                            <button 
+                                type="button"
+                                id="mic-btn"
+                                onclick="toggleSpeechRecognition()" 
+                                class="text-slate-400 hover:text-indigo-400 transition-colors p-1 rounded-lg"
+                                title="קלט קולי">
+                                <i data-lucide="mic" class="w-5 h-5"></i>
+                            </button>
+                            <button 
+                                type="button"
+                                onclick="clearInput()" 
+                                class="text-slate-500 hover:text-slate-300 transition-colors p-1"
+                                title="נקה טקסט">
+                                <i data-lucide="x" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preset Chips -->
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-3">
+                        בחירה מהירה / אקטואליה חי:
+                    </span>
+                    <div class="flex flex-wrap gap-2.5" id="preset-chips">
+                        <button type="button" onclick="selectPreset('ניתוח האווירה והחדשות המרכזיות בעולם כרגע')" class="preset-btn bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-200 hover:text-white px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all border border-indigo-500/40 flex items-center gap-2 shadow-lg shadow-indigo-500/10">
+                            🌐 חדשות ואקטואליה בזמן אמת
+                        </button>
+                        <button type="button" onclick="selectPreset('בשורות טובות ושמחה באוויר')" class="preset-btn glass-card hover:bg-white/10 text-slate-300 hover:text-white px-4 py-2 rounded-xl text-xs md:text-sm font-medium transition-all border border-white/10 flex items-center gap-2">
+                            ✨ בשורות טובות
+                        </button>
+                        <button type="button" onclick="selectPreset('אירוע מורכב בחו״ל')" class="preset-btn glass-card hover:bg-white/10 text-slate-300 hover:text-white px-4 py-2 rounded-xl text-xs md:text-sm font-medium transition-all border border-white/10 flex items-center gap-2">
+                            🗺️ אירוע בחו״ל
+                        </button>
+                        <button type="button" onclick="selectPreset('געגועים של מישהו שחוזר')" class="preset-btn glass-card hover:bg-white/10 text-slate-300 hover:text-white px-4 py-2 rounded-xl text-xs md:text-sm font-medium transition-all border border-white/10 flex items-center gap-2">
+                            🫂 געגועים של מישהו שחוזר
+                        </button>
+                        <button type="button" onclick="selectPreset('יום סוער וגשום בחוץ')" class="preset-btn glass-card hover:bg-white/10 text-slate-300 hover:text-white px-4 py-2 rounded-xl text-xs md:text-sm font-medium transition-all border border-white/10 flex items-center gap-2">
+                            🌧️ יום סוער
+                        </button>
+                        <button type="button" onclick="selectPreset('ניצחון מרגש והישג גדול')" class="preset-btn glass-card hover:bg-white/10 text-slate-300 hover:text-white px-4 py-2 rounded-xl text-xs md:text-sm font-medium transition-all border border-white/10 flex items-center gap-2">
+                            🏆 ניצחון מרגש
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button 
+                    type="submit" 
+                    id="submit-btn"
+                    class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 text-white font-bold text-base md:text-lg shadow-xl shadow-indigo-600/25 hover:shadow-indigo-600/40 transition-all duration-300 flex items-center justify-center gap-3 active:scale-[0.99]"
+                >
+                    <i data-lucide="sparkles" class="w-5 h-5"></i>
+                    <span>ניתוח והתאמת אווירה מקומית</span>
+                </button>
+            </form>
+        </section>
+
+        <!-- Loading Spinner State -->
+        <div id="loading-state" class="hidden glass-panel p-10 rounded-3xl text-center space-y-4 mb-8 border border-white/10">
+            <div class="relative w-16 h-16 mx-auto">
+                <div class="absolute inset-0 rounded-full border-4 border-indigo-500/20 border-t-indigo-500 animate-spin"></div>
+                <i data-lucide="cpu" class="w-6 h-6 text-indigo-400 absolute inset-0 m-auto animate-pulse"></i>
+            </div>
+            <h3 id="loading-title" class="text-xl font-bold text-slate-100">מנתח אווירה ומחשב תדרים בדפדפן...</h3>
+            <p id="loading-sub" class="text-sm text-slate-400 animate-pulse">המנוע סורק מילות מפתח, מתאים פלטת צבעים ושיר מתאים</p>
+        </div>
+
+        <!-- Output Results Section -->
+        <section id="result-section" class="hidden space-y-6 mb-8 transition-all duration-500">
+            
+            <!-- Result Main Card -->
+            <div class="glass-panel rounded-3xl p-6 md:p-8 border border-white/15 relative overflow-hidden shadow-2xl" id="result-main-card">
+                
+                <!-- Dynamic Glow Bar -->
+                <div id="result-glow-bar" class="absolute top-0 right-0 left-0 h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
+
+                <!-- Top Controls & Social Bar -->
+                <div class="flex flex-wrap justify-between items-center gap-4 mb-6 border-b border-white/10 pb-4">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xl">🎨</span>
+                        <h2 id="mood-name-display" class="text-xl md:text-2xl font-black text-white">
+                            שם האווירה
+                        </h2>
+                    </div>
+
+                    <!-- Social Controls (Like, Comments, WhatsApp, Copy, Fav) -->
+                    <div class="flex items-center flex-wrap gap-2">
+                        <!-- Like Button -->
+                        <button 
+                            onclick="handleLike()" 
+                            id="like-btn"
+                            class="glass-card hover:bg-white/10 text-slate-300 hover:text-red-400 px-3 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center gap-1.5 border border-white/10"
+                            title="לייק"
+                        >
+                            <i data-lucide="thumbs-up" id="like-icon" class="w-4 h-4"></i>
+                            <span id="like-count">0</span>
+                        </button>
+
+                        <!-- Comments Toggle Button -->
+                        <button 
+                            onclick="toggleCommentsSection()" 
+                            id="comment-btn"
+                            class="glass-card hover:bg-white/10 text-slate-300 hover:text-indigo-400 px-3 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center gap-1.5 border border-white/10"
+                            title="תגובות"
+                        >
+                            <i data-lucide="message-square" class="w-4 h-4"></i>
+                            <span id="comments-count">0</span>
+                        </button>
+
+                        <!-- WhatsApp Share Button -->
+                        <button 
+                            onclick="shareWhatsApp()" 
+                            class="glass-card bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 px-3 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center gap-1.5 border border-emerald-500/30 shadow-md"
+                            title="שתף ב-WhatsApp"
+                        >
+                            <i data-lucide="share-2" class="w-4 h-4 text-emerald-400"></i>
+                            <span>וואטסאפ</span>
+                        </button>
+
+                        <!-- Favorites Button -->
+                        <button 
+                            onclick="toggleFavoriteCurrent()" 
+                            id="fav-btn"
+                            class="glass-card hover:bg-white/10 text-slate-300 hover:text-pink-400 px-3 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center gap-1.5 border border-white/10"
+                            title="שמור למועדפים"
+                        >
+                            <i data-lucide="heart" id="fav-icon" class="w-4 h-4"></i>
+                        </button>
+
+                        <!-- Copy Button -->
+                        <button 
+                            onclick="copyResultText()" 
+                            class="glass-card hover:bg-white/10 text-slate-300 hover:text-white px-3 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center gap-1.5 border border-white/10"
+                        >
+                            <i data-lucide="copy" class="w-4 h-4"></i>
+                            <span id="copy-btn-text">העתק</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Grid Details -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                    <!-- Right Column: Analysis & Heart Message -->
+                    <div class="space-y-6">
+                        
+                        <!-- 1. Situation Analysis -->
+                        <div class="bg-slate-900/50 p-5 rounded-2xl border border-white/5 space-y-2">
+                            <div class="flex items-center gap-2 text-indigo-400 font-bold text-sm">
+                                <i data-lucide="globe" class="w-4 h-4"></i>
+                                <span>🌍 ניתוח המצב והאווירה</span>
+                            </div>
+                            <p id="analysis-text" class="text-slate-200 text-sm md:text-base leading-relaxed">
+                                --
+                            </p>
+                        </div>
+
+                        <!-- 3. Message from the Heart -->
+                        <div class="bg-slate-900/50 p-5 rounded-2xl border border-white/5 space-y-2">
+                            <div class="flex items-center gap-2 text-pink-400 font-bold text-sm">
+                                <i data-lucide="heart" class="w-4 h-4"></i>
+                                <span>💬 מסר ללב</span>
+                            </div>
+                            <blockquote id="message-text" class="text-slate-100 italic text-base md:text-lg font-medium border-r-4 border-pink-500 pr-3.5 py-1">
+                                "--"
+                            </blockquote>
+                        </div>
+
+                        <!-- Embedded Player Box -->
+                        <div class="bg-slate-900/50 p-4 rounded-2xl border border-white/5 space-y-3">
+                            <div class="flex items-center gap-2 text-red-400 font-bold text-sm">
+                                <i data-lucide="play-circle" class="w-4 h-4"></i>
+                                <span>📺 נגן מוזיקה מובנה</span>
+                            </div>
+                            <div class="aspect-video w-full rounded-xl overflow-hidden bg-black/60 shadow-inner">
+                                <iframe id="youtube-embed" class="w-full h-full" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Left Column: Song Recommendation & Visuals -->
+                    <div class="space-y-6 flex flex-col justify-between">
+                        
+                        <!-- 2. Selected Track Card -->
+                        <div class="bg-gradient-to-br from-indigo-950/60 to-slate-900/70 p-5 rounded-2xl border border-indigo-500/30 space-y-4">
+                            <div class="flex items-center gap-2 text-emerald-400 font-bold text-sm">
+                                <i data-lucide="music" class="w-4 h-4"></i>
+                                <span>🎵 השיר הנבחר</span>
+                            </div>
+                            
+                            <div class="flex items-center gap-4">
+                                <div id="album-art-box" class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-600 flex items-center justify-center shrink-0 shadow-lg text-white">
+                                    <i data-lucide="disc" class="w-7 h-7 animate-spin-slow"></i>
+                                </div>
+                                <div class="overflow-hidden">
+                                    <h3 id="song-title" class="text-lg md:text-xl font-extrabold text-white truncate">
+                                        שם השיר
+                                    </h3>
+                                    <p id="artist-name" class="text-slate-400 text-sm font-medium truncate">
+                                        שם האמן
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Quick Play Links -->
+                            <div class="pt-3 border-t border-white/10">
+                                <span class="text-xs text-slate-400 block mb-2.5 font-semibold">🔗 האזנה בלחיצה:</span>
+                                <div class="flex flex-wrap gap-2.5">
+                                    <a 
+                                        id="spotify-link" 
+                                        href="#" 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        class="flex-1 min-w-[120px] bg-emerald-600/20 hover:bg-emerald-600/35 text-emerald-300 border border-emerald-500/30 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-md"
+                                    >
+                                        <i data-lucide="play-circle" class="w-4 h-4"></i>
+                                        <span>Spotify</span>
+                                    </a>
+                                    <a 
+                                        id="youtube-link" 
+                                        href="#" 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        class="flex-1 min-w-[120px] bg-red-600/20 hover:bg-red-600/35 text-red-300 border border-red-500/30 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-md"
+                                    >
+                                        <i data-lucide="youtube" class="w-4 h-4"></i>
+                                        <span>YouTube</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Visual & Color Palette Profile -->
+                        <div class="bg-slate-900/50 p-5 rounded-2xl border border-white/5 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2 text-cyan-400 font-bold text-sm">
+                                    <i data-lucide="palette" class="w-4 h-4"></i>
+                                    <span>🎨 אווירה ויזואלית ופלטת צבעים</span>
+                                </div>
+                            </div>
+
+                            <!-- Color Swatches Display -->
+                            <div class="flex items-center gap-3" id="color-swatches-container">
+                                <!-- Dynamic Swatches -->
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Interactive Comments Section Drawer -->
+                <div id="comments-drawer" class="hidden mt-6 pt-6 border-t border-white/10 space-y-4">
+                    <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                        <i data-lucide="message-square" class="w-4 h-4 text-indigo-400"></i>
+                        <span>תגובות ומחשבות על האווירה הזו:</span>
+                    </h3>
+
+                    <!-- Comments Input Form -->
+                    <div class="flex gap-2">
+                        <input 
+                            type="text" 
+                            id="comment-input"
+                            placeholder="מה דעתך על השיר והמסר הזה?" 
+                            class="flex-1 glass-input rounded-xl px-4 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none"
+                            onkeypress="if(event.key === 'Enter') submitComment()"
+                        >
+                        <button 
+                            onclick="submitComment()" 
+                            class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-xl text-sm transition-all"
+                        >
+                            שלח
+                        </button>
+                    </div>
+
+                    <!-- Comments List -->
+                    <div id="comments-list" class="space-y-2 max-h-40 overflow-y-auto pr-1">
+                        <!-- Dynamic Comments -->
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Analytics & History Section -->
+        <section id="history-section" class="hidden space-y-4">
+            
+            <!-- Mood Analytics Bar -->
+            <div class="glass-panel rounded-2xl p-4 md:p-5 border border-white/5">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2 mb-3">
+                    <i data-lucide="bar-chart-2" class="w-4 h-4"></i>
+                    <span>ניתוח אווירות נפוצות בחיפושים שלך</span>
+                </h3>
+                <div id="analytics-bars" class="space-y-2">
+                    <!-- Dynamic Analytics -->
+                </div>
+            </div>
+
+            <!-- Tabbed History & Favorites Container -->
+            <div class="glass-panel rounded-2xl p-4 md:p-6 border border-white/5">
+                <div class="flex justify-between items-center mb-4 border-b border-white/10 pb-3">
+                    <div class="flex gap-4">
+                        <button onclick="switchTab('history')" id="tab-btn-history" class="text-xs font-bold uppercase tracking-wider text-indigo-400 border-b-2 border-indigo-500 pb-1">
+                            היסטוריה אחרונה
+                        </button>
+                        <button onclick="switchTab('favorites')" id="tab-btn-favorites" class="text-xs font-bold uppercase tracking-wider text-slate-400 hover:text-white pb-1">
+                            מועדפים (<span id="fav-count">0</span>)
+                        </button>
+                    </div>
+                    <button onclick="clearCurrentTab()" class="text-xs text-slate-500 hover:text-red-400 transition-colors">ניקוי</button>
+                </div>
+                
+                <div id="tab-content-history" class="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1">
+                    <!-- Dynamic Items -->
+                </div>
+
+                <div id="tab-content-favorites" class="hidden flex flex-col gap-2 max-h-48 overflow-y-auto pr-1">
+                    <!-- Dynamic Favorites -->
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="relative z-10 text-center py-6 border-t border-white/5 text-slate-500 text-xs">
+        <p>Vibe & World Events Analyst • Offline Intelligent Engine</p>
+    </footer>
+
+    <!-- Application Script -->
+    <script>
+        const LOCAL_VIBE_DATABASE = [
+            {
+                keywords: ['חדשות', 'אקטואליה', 'עולם', 'גלובלי', 'אירוע', 'פוליטיק', 'חדש'],
+                vibe_name: 'תדר אקטואלי גלובלי',
+                analysis: 'התרחשויות ואקטואליה בעולם מביאות איתן קצב מהיר ומידע רב. זהו זמן לשמור על חדות ומחשבה צלולה.',
+                message: 'גם כשהעולם סוער וזז מהר, השקט הפנימי הוא העוגן שלך.',
+                song_title: 'Imagine',
+                artist: 'John Lennon',
+                colors: ['#6366f1', '#8b5cf6', '#3b82f6'],
+                spotify_query: 'Imagine John Lennon',
+                youtube_query: 'Imagine John Lennon',
+                youtube_embed_id: 'YkgkThbdXmU'
+            },
+            {
+                keywords: ['שמחה', 'בשורות טובות', 'טוב', 'אושר', 'חגיגה', 'חיוך', 'כיף'],
+                vibe_name: 'אור וארץ שמחה',
+                analysis: 'אנרגיה חיובית ומרוממת נפש מרחפת באוויר. בשורות טובות מביאות עימן הזדמנות לחגוג ולשתף את השמחה.',
+                message: 'תפתח את הלב אל הטוב שמגיע, מגיע לך לשמוח ולהנות מהרגע.',
+                song_title: 'Happy',
+                artist: 'Pharrell Williams',
+                colors: ['#f59e0b', '#ef4444', '#ec4899'],
+                spotify_query: 'Happy Pharrell Williams',
+                youtube_query: 'Happy Pharrell Williams',
+                youtube_embed_id: 'ZbZSe6N_BXs'
+            },
+            {
+                keywords: ['גשם', 'סערה', 'חורף', 'קר', 'סוער', 'רוח', 'עננים'],
+                vibe_name: 'חיבוק של חורף',
+                analysis: 'מזג האוויר בחוץ סוער וגשום, מה שמזמין התכנסות פנימה, כוס תה חם והאזנה לצלילים מרגיעים.',
+                message: 'תקשיב לטיפות בחוץ ותן ללב לנוח ולהטעין מצברים.',
+                song_title: 'Riders on the Storm',
+                artist: 'The Doors',
+                colors: ['#1e293b', '#0284c7', '#0f172a'],
+                spotify_query: 'Riders on the Storm The Doors',
+                youtube_query: 'Riders on the Storm The Doors',
+                youtube_embed_id: 'k9o78gZso6g'
+            },
+            {
+                keywords: ['ניצחון', 'הישג', 'הצלחה', '🏆', 'זכייה', 'גאווה', 'ספורט'],
+                vibe_name: 'פסגת הניצחון',
+                analysis: 'תחושת הישג אדירה ועבודה קשה שמשתלמת! האווירה מלאה בגאווה, נחישות ואנרגיה של ניצחון.',
+                message: 'תסתכל אחורה על הדרך שעברת – הזמן ליהנות מהפירות!',
+                song_title: 'We Are The Champions',
+                artist: 'Queen',
+                colors: ['#eab308', '#f97316', '#854d0e'],
+                spotify_query: 'We Are The Champions Queen',
+                youtube_query: 'We Are The Champions Queen',
+                youtube_embed_id: '04854XqIGCY'
+            },
+            {
+                keywords: ['געגוע', 'חוזר', 'בית', 'חזרה', 'חיבוק', 'משפחה', 'שוב'],
+                vibe_name: 'שוב הביתה',
+                analysis: 'תחושת געגוע עמוקה שמתחלפת בחמימות של המפגש מחדש. קשרים עמוקים ובית מעניקים ביטחון.',
+                message: 'אין כמו התחושה להגיע למקום ולנפשות שבאמת מבינות אותך.',
+                song_title: 'Coming Home',
+                artist: 'Diddy - Dirty Money ft. Skylar Grey',
+                colors: ['#ec4899', '#8b5cf6', '#be185d'],
+                spotify_query: 'Coming Home Diddy Skylar Grey',
+                youtube_query: 'Coming Home Diddy Skylar Grey',
+                youtube_embed_id: 'k-ImCpNqbJw'
+            },
+            {
+                keywords: ['חו"ל', 'טיול', 'דובאי', 'נסיעה', 'מטוס', 'עולם', 'חופש'],
+                vibe_name: 'מסע מעבר לאופק',
+                analysis: 'אווירה של חופש, גילוי מחוזות חדשים ותרבויות מרתקות. התרגשות של הרפתקה חדשה באוויר.',
+                message: 'תפתח את הראש לחוויות חדשות, העולם מלא ביופי שרק מחכה שתגלה אותו.',
+                song_title: 'A Sky Full of Stars',
+                artist: 'Coldplay',
+                colors: ['#06b6d4', '#3b82f6', '#1d4ed8'],
+                spotify_query: 'A Sky Full of Stars Coldplay',
+                youtube_query: 'A Sky Full of Stars Coldplay',
+                youtube_embed_id: 'VPRjCeoBqrI'
+            }
+        ];
+
+        let history = [];
+        let favorites = [];
+        let likesStore = {};
+        let commentsStore = {};
+        let currentResultRaw = null;
+        let activeTab = 'history';
+        let recognition = null;
+        let isListening = false;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            loadStorageData();
+            setupSpeechRecognition();
+        });
+
+        function selectPreset(presetText) {
+            const textarea = document.getElementById('event-input');
+            textarea.value = presetText;
+            textarea.focus();
+        }
+
+        function clearInput() {
+            document.getElementById('event-input').value = '';
+            document.getElementById('event-input').focus();
+        }
+
+        function setupSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (SpeechRecognition) {
+                recognition = new SpeechRecognition();
+                recognition.lang = 'he-IL';
+                recognition.continuous = false;
+
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    const textarea = document.getElementById('event-input');
+                    textarea.value += (textarea.value ? ' ' : '') + transcript;
+                };
+
+                recognition.onend = () => {
+                    isListening = false;
+                    document.getElementById('mic-btn').classList.remove('text-red-500', 'animate-pulse');
+                };
+            }
+        }
+
+        function toggleSpeechRecognition() {
+            if (!recognition) {
+                alert('זיהוי קולי אינו נתמך בדפדפן זה.');
+                return;
+            }
+            const micBtn = document.getElementById('mic-btn');
+            if (isListening) {
+                recognition.stop();
+                isListening = false;
+                micBtn.classList.remove('text-red-500', 'animate-pulse');
+            } else {
+                recognition.start();
+                isListening = true;
+                micBtn.classList.add('text-red-500', 'animate-pulse');
+            }
+        }
+
+        async function handleAnalyze(event) {
+            event.preventDefault();
+            const inputVal = document.getElementById('event-input').value.trim();
+            if (!inputVal) return;
+
+            const submitBtn = document.getElementById('submit-btn');
+            const loadingState = document.getElementById('loading-state');
+            const resultSection = document.getElementById('result-section');
+
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            loadingState.classList.remove('hidden');
+            resultSection.classList.add('hidden');
+
+            setTimeout(() => {
+                const result = fetchLocalVibeRecommendation(inputVal);
+                renderResult(result, inputVal);
+                saveToHistory(inputVal, result);
+
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                loadingState.classList.add('hidden');
+                lucide.createIcons();
+            }, 600);
+        }
+
+        function fetchLocalVibeRecommendation(userScenario) {
+            const textLower = userScenario.toLowerCase();
+            
+            const matchedVibe = LOCAL_VIBE_DATABASE.find(item => 
+                item.keywords.some(keyword => textLower.includes(keyword))
+            );
+
+            if (matchedVibe) {
+                return matchedVibe;
+            }
+
+            return {
+                vibe_name: 'שקט ואיזון פנימי',
+                analysis: `ניתוח האווירה עבור: "${userScenario}". הרגע מתאפיין בחיפוש אחר רוגע, מחשבה צלולה ואיזון רגשי.`,
+                message: 'קח נשימה עמוקה, תן למנגינה ללוות אותך ותסמוך על הדרך שלך.',
+                song_title: 'Weightless',
+                artist: 'Marconi Union',
+                colors: ['#10b981', '#06b6d4', '#047857'],
+                spotify_query: 'Weightless Marconi Union',
+                youtube_query: 'Weightless Marconi Union',
+                youtube_embed_id: 'UfcAVejslrU'
+            };
+        }
+
+        function renderResult(data, originalScenario) {
+            currentResultRaw = { data, scenario: originalScenario };
+
+            document.getElementById('analysis-text').textContent = data.analysis || '--';
+            document.getElementById('message-text').textContent = `"${data.message || ''}"`;
+            document.getElementById('song-title').textContent = data.song_title || 'שיר נבחר';
+            document.getElementById('artist-name').textContent = data.artist || 'אמן';
+            document.getElementById('mood-name-display').textContent = data.vibe_name || 'אווירה מותאמת';
+
+            const embedIframe = document.getElementById('youtube-embed');
+            if (data.youtube_embed_id) {
+                embedIframe.src = `https://www.youtube.com/embed/${data.youtube_embed_id}?autoplay=0`;
+            } else {
+                embedIframe.src = '';
+            }
+
+            const spotQuery = encodeURIComponent(data.spotify_query || `${data.song_title} ${data.artist}`);
+            const ytQuery = encodeURIComponent(data.youtube_query || `${data.song_title} ${data.artist}`);
+            
+            document.getElementById('spotify-link').href = `https://open.spotify.com/search/${spotQuery}`;
+            document.getElementById('youtube-link').href = `https://www.youtube.com/results?search_query=${ytQuery}`;
+
+            const colors = (Array.isArray(data.colors) && data.colors.length >= 3) ? data.colors : ['#6366f1', '#a855f7', '#ec4899'];
+            
+            const swatchesContainer = document.getElementById('color-swatches-container');
+            swatchesContainer.innerHTML = colors.map((hex) => `
+                <div class="flex-1 h-9 rounded-xl border border-white/20 transition-all duration-300 hover:scale-105 shadow-md flex items-center justify-center text-[10px] font-mono font-bold text-white/90" 
+                     style="background-color: ${hex}" 
+                     title="${hex}">
+                    ${hex}
+                </div>
+            `).join('');
+
+            const orb1 = document.getElementById('bg-orb-1');
+            const orb2 = document.getElementById('bg-orb-2');
+            const orb3 = document.getElementById('bg-orb-3');
+
+            if (colors[0]) orb1.style.backgroundColor = colors[0];
+            if (colors[1]) orb2.style.backgroundColor = colors[1];
+            if (colors[2]) orb3.style.backgroundColor = colors[2];
+
+            const resultGlow = document.getElementById('result-glow-bar');
+            resultGlow.style.background = `linear-gradient(to left, ${colors.join(', ')})`;
+
+            const mainPanel = document.getElementById('main-input-panel');
+            const resultCard = document.getElementById('result-main-card');
+            mainPanel.style.borderColor = `${colors[0]}55`;
+            resultCard.style.borderColor = `${colors[1]}55`;
+
+            updateFavButtonState();
+            updateLikesAndCommentsUI();
+
+            const resultSection = document.getElementById('result-section');
+            resultSection.classList.remove('hidden');
+            resultSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // ==========================================
+        // חדש: פונקציות לייקים, תגובות ושיתוף ב-WhatsApp
+        // ==========================================
+
+        function getItemId() {
+            if (!currentResultRaw) return '';
+            return `${currentResultRaw.data.vibe_name}_${currentResultRaw.data.song_title}`.replace(/\s+/g, '_');
+        }
+
+        function handleLike() {
+            const id = getItemId();
+            if (!id) return;
+
+            if (!likesStore[id]) {
+                likesStore[id] = { count: 1, userLiked: true };
+            } else {
+                if (likesStore[id].userLiked) {
+                    likesStore[id].count--;
+                    likesStore[id].userLiked = false;
+                } else {
+                    likesStore[id].count++;
+                    likesStore[id].userLiked = true;
+                }
+            }
+
+            localStorage.setItem('vibe_analyst_likes', JSON.stringify(likesStore));
+            updateLikesAndCommentsUI();
+        }
+
+        function toggleCommentsSection() {
+            const drawer = document.getElementById('comments-drawer');
+            drawer.classList.toggle('hidden');
+        }
+
+        function submitComment() {
+            const id = getItemId();
+            const input = document.getElementById('comment-input');
+            const text = input.value.trim();
+            if (!id || !text) return;
+
+            if (!commentsStore[id]) commentsStore[id] = [];
+            
+            const newComment = {
+                text,
+                date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            };
+
+            commentsStore[id].push(newComment);
+            localStorage.setItem('vibe_analyst_comments', JSON.stringify(commentsStore));
+
+            input.value = '';
+            updateLikesAndCommentsUI();
+        }
+
+        function shareWhatsApp() {
+            if (!currentResultRaw) return;
+            const { data } = currentResultRaw;
+
+            const text = `✨ *ניתוח אווירה ושיר מומלץ* ✨\n\n` +
+                         `🎨 *אווירה:* ${data.vibe_name}\n` +
+                         `🌍 *מצב:* ${data.analysis}\n` +
+                         `🎵 *שיר מומלץ:* ${data.song_title} - ${data.artist}\n` +
+                         `💬 *מסר ללב:* "${data.message}"\n\n` +
+                         `הופק באמצעות מנוע המלצות מוזיקה ואנליסט אווירה 🎧`;
+
+            const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        function updateLikesAndCommentsUI() {
+            const id = getItemId();
+            if (!id) return;
+
+            // עדכון לייקים
+            const itemLikeData = likesStore[id] || { count: 0, userLiked: false };
+            document.getElementById('like-count').textContent = itemLikeData.count;
+            const likeIcon = document.getElementById('like-icon');
+            if (itemLikeData.userLiked) {
+                likeIcon.classList.add('fill-red-500', 'text-red-500');
+            } else {
+                likeIcon.classList.remove('fill-red-500', 'text-red-500');
+            }
+
+            // עדכון תגובות
+            const comments = commentsStore[id] || [];
+            document.getElementById('comments-count').textContent = comments.length;
+
+            const commentsList = document.getElementById('comments-list');
+            if (comments.length === 0) {
+                commentsList.innerHTML = '<p class="text-xs text-slate-500">אין תגובות עדיין. היה הראשון להגיב!</p>';
+            } else {
+                commentsList.innerHTML = comments.map(c => `
+                    <div class="bg-slate-900/60 p-2.5 rounded-xl text-xs text-slate-200 border border-white/5 flex justify-between items-center">
+                        <span>${c.text}</span>
+                        <span class="text-[10px] text-slate-500">${c.date}</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // ==========================================
+
+        async function copyResultText() {
+            if (!currentResultRaw) return;
+            const { data } = currentResultRaw;
+
+            const textToCopy = 
+`🌍 ניתוח המצב: ${data.analysis}
+
+🎵 השיר הנבחר: ${data.song_title} - ${data.artist}
+
+💬 מסר ללב: ${data.message}
+
+🎨 אווירה ויזואלית: ${data.vibe_name} (${data.colors ? data.colors.join(', ') : ''})`;
+
+            const btnText = document.getElementById('copy-btn-text');
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(textToCopy);
+                } else {
+                    const textArea = document.createElement("textarea");
+                    textArea.value = textToCopy;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                }
+                btnText.textContent = 'הועתק! ✨';
+                setTimeout(() => { btnText.textContent = 'העתק'; }, 2500);
+            } catch (err) {
+                console.error('Copy failed', err);
+            }
+        }
+
+        function saveToHistory(scenario, resultData) {
+            const item = {
+                scenario,
+                song_title: resultData.song_title,
+                artist: resultData.artist,
+                vibe_name: resultData.vibe_name,
+                resultData
+            };
+            history.unshift(item);
+            if (history.length > 10) history.pop();
+            localStorage.setItem('vibe_analyst_history', JSON.stringify(history));
+            renderHistoryAndAnalytics();
+        }
+
+        function toggleFavoriteCurrent() {
+            if (!currentResultRaw) return;
+            const index = favorites.findIndex(f => f.scenario === currentResultRaw.scenario && f.vibe_name === currentResultRaw.data.vibe_name);
+            if (index >= 0) {
+                favorites.splice(index, 1);
+            } else {
+                favorites.unshift({
+                    scenario: currentResultRaw.scenario,
+                    song_title: currentResultRaw.data.song_title,
+                    artist: currentResultRaw.data.artist,
+                    vibe_name: currentResultRaw.data.vibe_name,
+                    resultData: currentResultRaw.data
+                });
+            }
+            localStorage.setItem('vibe_analyst_favs', JSON.stringify(favorites));
+            updateFavButtonState();
+            renderHistoryAndAnalytics();
+        }
+
+        function updateFavButtonState() {
+            if (!currentResultRaw) return;
+            const isFav = favorites.some(f => f.scenario === currentResultRaw.scenario && f.vibe_name === currentResultRaw.data.vibe_name);
+            const favIcon = document.getElementById('fav-icon');
+            if (isFav) {
+                favIcon.classList.add('fill-pink-500', 'text-pink-500');
+            } else {
+                favIcon.classList.remove('fill-pink-500', 'text-pink-500');
+            }
+        }
+
+        function loadStorageData() {
+            try {
+                const savedHist = localStorage.getItem('vibe_analyst_history');
+                if (savedHist) history = JSON.parse(savedHist);
+
+                const savedFavs = localStorage.getItem('vibe_analyst_favs');
+                if (savedFavs) favorites = JSON.parse(savedFavs);
+
+                const savedLikes = localStorage.getItem('vibe_analyst_likes');
+                if (savedLikes) likesStore = JSON.parse(savedLikes);
+
+                const savedComments = localStorage.getItem('vibe_analyst_comments');
+                if (savedComments) commentsStore = JSON.parse(savedComments);
+
+                renderHistoryAndAnalytics();
+            } catch(e) { history = []; favorites = []; likesStore = {}; commentsStore = {}; }
+        }
+
+        function renderHistoryAndAnalytics() {
+            const historySection = document.getElementById('history-section');
+            const historyList = document.getElementById('tab-content-history');
+            const favsList = document.getElementById('tab-content-favorites');
+            document.getElementById('fav-count').textContent = favorites.length;
+
+            if (history.length === 0 && favorites.length === 0) {
+                historySection.classList.add('hidden');
+                return;
+            }
+
+            historySection.classList.remove('hidden');
+
+            historyList.innerHTML = history.map((item, idx) => `
+                <div class="glass-card p-3 rounded-xl text-xs flex justify-between items-center text-slate-300 hover:bg-white/10 transition-colors cursor-pointer" onclick="loadHistoryItem(${idx})">
+                    <span class="font-medium truncate max-w-[200px] md:max-w-md text-slate-200">
+                        <span class="text-indigo-400 font-bold ml-1">${item.vibe_name || 'אווירה'}:</span> ${item.scenario}
+                    </span>
+                    <span class="text-emerald-400 font-semibold truncate shrink-0">${item.song_title || ''} - ${item.artist || ''}</span>
+                </div>
+            `).join('');
+
+            favsList.innerHTML = favorites.map((item, idx) => `
+                <div class="glass-card p-3 rounded-xl text-xs flex justify-between items-center text-slate-300 hover:bg-white/10 transition-colors cursor-pointer" onclick="loadFavItem(${idx})">
+                    <span class="font-medium truncate max-w-[200px] md:max-w-md text-slate-200">
+                        <span class="text-pink-400 font-bold ml-1">${item.vibe_name || 'אווירה'}:</span> ${item.scenario}
+                    </span>
+                    <span class="text-emerald-400 font-semibold truncate shrink-0">${item.song_title || ''} - ${item.artist || ''}</span>
+                </div>
+            `).join('');
+
+            renderAnalytics();
+            lucide.createIcons();
+        }
+
+        function renderAnalytics() {
+            const counts = {};
+            history.forEach(item => {
+                const name = item.vibe_name || 'אחר';
+                counts[name] = (counts[name] || 0) + 1;
+            });
+
+            const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1]).slice(0, 3);
+            const total = history.length || 1;
+            const container = document.getElementById('analytics-bars');
+
+            if (sorted.length === 0) {
+                container.innerHTML = '<span class="text-xs text-slate-500">אין מספיק נתונים לניתוח</span>';
+                return;
+            }
+
+            container.innerHTML = sorted.map(([name, count]) => {
+                const pct = Math.round((count / total) * 100);
+                return `
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-[11px] text-slate-300">
+                            <span>${name}</span>
+                            <span class="font-bold">${pct}%</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-indigo-500 to-pink-500" style="width: ${pct}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function switchTab(tab) {
+            activeTab = tab;
+            const histBtn = document.getElementById('tab-btn-history');
+            const favBtn = document.getElementById('tab-btn-favorites');
+            const histContent = document.getElementById('tab-content-history');
+            const favContent = document.getElementById('tab-content-favorites');
+
+            if (tab === 'history') {                histBtn.className = 'text-xs font-bold uppercase tracking-wider text-indigo-400 border-b-2 border-indigo-500 pb-1';
+                favBtn.className = 'text-xs font-bold uppercase tracking-wider text-slate-400 hover:text-white pb-1';
+                histContent.classList.remove('hidden');
+                favContent.classList.add('hidden');
+            } else {
+                favBtn.className = 'text-xs font-bold uppercase tracking-wider text-pink-400 border-b-2 border-pink-500 pb-1';
+                histBtn.className = 'text-xs font-bold uppercase tracking-wider text-slate-400 hover:text-white pb-1';
+                favContent.classList.remove('hidden');
+                histContent.classList.add('hidden');
+            }
+        }
+
+        function loadHistoryItem(index) {
+            const item = history[index];
+            if (item && item.resultData) {
+                document.getElementById('event-input').value = item.scenario;
+                renderResult(item.resultData, item.scenario);
+            }
+        }
+
+        function loadFavItem(index) {
+            const item = favorites[index];
+            if (item && item.resultData) {
+                document.getElementById('event-input').value = item.scenario;
+                renderResult(item.resultData, item.scenario);
+            }
+        }
+
+        function clearCurrentTab() {
+            if (activeTab === 'history') {
+                history = [];
+                localStorage.removeItem('vibe_analyst_history');
+            } else {
+                favorites = [];
+                localStorage.removeItem('vibe_analyst_favs');
+            }
+            renderHistoryAndAnalytics();
+        }
+    </script>
+</body>
+</html>

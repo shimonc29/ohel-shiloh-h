@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>מתכונט - שיתוף וחיפוש מתכונים לפי מצרכים עם AI</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- React & ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <!-- Babel -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap');
+    body {
+      font-family: 'Rubik', sans-serif;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #10b981;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #059669;
+    }
+    .animate-pulse-slow {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen antialiased">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useMemo } = React;
+
+    const initialRecipes = [
+      {
+        id: 1,
+        title: "שקשוקה קלאסית עשירה",
+        image: "https://images.unsplash.com/photo-1590412200988-a436970781fa?auto=format&fit=crop&w=800&q=80",
+        ingredients: ["עגבניות", "ביצים", "שום", "פלפל חריף", "שמן זית", "בצל", "פפריקה מתוקה"],
+        instructions: [
+          "מטגנים את הבצל והפלפל החריף בשמן זית עד להתרככות והזהבה קלה.",
+          "מוסיפים שום קצוץ, עגבניות חתוכות ותבלינים, ומבשלים כ-15 דקות עד לקבלת רוטב סמיך ועשיר.",
+          "יוצרים גומות קטנות ברוטב ושוברים לתוכן בעדינות את הביצים.",
+          "מכסים את המחבת ומבשלים על אש נמוכה עד שהחלבון מתייצב והחלמון נשאר רך."
+        ],
+        prepTime: 25,
+        difficulty: "קל",
+        dietary: ["צמחוני", "ללא גלוטן", "פרווה"],
+        chefTip: "מומלץ להגיש עם לחם טרי לטבילה ברוטב העשיר!",
+        likes: 14,
+        isLiked: false,
+        isFavorite: false,
+        comments: [
+          { id: 1, author: "דניאל", text: "יצא מדהים! הוספתי גם קצת פטרוזיליה וגבינת פטה למעלה." }
+        ]
+      },
+      {
+        id: 2,
+        title: "פסטה ברוטב עגבניות ובזיליקום",
+        image: "https://images.unsplash.com/photo-1621996346565-e3d5d6281316?auto=format&fit=crop&w=800&q=80",
+        ingredients: ["פסטה", "עגבניות", "שום", "שמן זית", "בזיליקום"],
+        instructions: [
+          "מרתיחים מים בסיר גדול עם מלח ומבשלים את הפסטה לפי הוראות היצרן.",
+          "במחבת נפרדת, מחממים שמן זית ומטגנים שום קצוץ קלות.",
+          "מוסיפים עגבניות מרוסקות ובזיליקום טרי, ומבשלים כ-10 דקות.",
+          "מאחדים את הפסטה המבושלת עם הרוטב ומגישים חם."
+        ],
+        prepTime: 20,
+        difficulty: "קל",
+        dietary: ["טבעוני", "פרווה"],
+        chefTip: "גרדו מעט פרמזן מעל לפני ההגשה למרקם עשיר עוד יותר.",
+        likes: 22,
+        isLiked: false,
+        isFavorite: false,
+        comments: []
+      },
+      {
+        id: 3,
+        title: "פנקייק אוורירי לבוקר",
+        image: "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?auto=format&fit=crop&w=800&q=80",
+        ingredients: ["קמח", "ביצים", "חלב", "סוכר", "חמאה", "אבקת אפייה"],
+        instructions: [
+          "מערבבים בקערה גדולה קמח, סוכר ואבקת אפייה.",
+          "בקערה נפרדת טורפים ביצים, חלב וחמאה מומסת.",
+          "מאחדים את החומרים היבשים והרטובים עד לקבלת בלילה אחידה.",
+          "יוצקים מחצית מצקת למחבת חמה ומשומנת, והופכים כשמופיעות בועות."
+        ],
+        prepTime: 15,
+        difficulty: "קל",
+        dietary: ["צמחוני", "חלבי"],
+        chefTip: "אל תערבבו את הבלילה יותר מדי כדי שהפנקייקים יישארו אווריריים.",
+        likes: 35,
+        isLiked: false,
+        isFavorite: false,
+        comments: []
+      }
+    ];
+
+    const POPULAR_INGREDIENTS = [
+      "עגבניות", "ביצים", "בצל", "שום", "תפוחי אדמה", "פסטה", "אורז", 
+      "חזה עוף", "גבינה צהובה", "טונה", "מלפפון", "גזר", "קמח", "חלב", "שמן זית"
+    ];
+
+    const DIETARY_OPTIONS = ["טבעוני", "צמחוני", "ללא גלוטן", "פרווה", "חלבי", "בשרי"];
+    const MEAL_TYPES = ["הכל", "ארוחת בוקר", "ארוחת צהריים", "ארוחת ערב", "נשנוש / מאפה", "קינוח"];
+
+    function App() {
+      const [activeTab, setActiveTab] = useState('generator'); // 'browse' | 'generator'
+      const [recipes, setRecipes] = useState(initialRecipes);
+
+      // AI Chef Generator State
+      const [aiIngredients, setAiIngredients] = useState([]);
+      const [customIngredientInput, setCustomIngredientInput] = useState('');
+      const [selectedMealType, setSelectedMealType] = useState('הכל');
+      const [selectedDietaryFilter, setSelectedDietaryFilter] = useState('הכל');
+      const [selectedPrepTimeLimit, setSelectedPrepTimeLimit] = useState('30');
+      const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+      const [generatedAiRecipe, setGeneratedAiRecipe] = useState(null);
+      const [aiError, setAiError] = useState('');
+      const [toastMessage, setToastMessage] = useState('');
+
+      // Browse Filters State
+      const [selectedSearchIngredients, setSelectedSearchIngredients] = useState([]);
+      const [searchQuery, setSearchQuery] = useState('');
+      const [selectedDifficulty, setSelectedDifficulty] = useState('הכל');
+      const [selectedDietary, setSelectedDietary] = useState('הכל');
+      const [maxPrepTime, setMaxPrepTime] = useState('');
+      const [onlyFavorites, setOnlyFavorites] = useState(false);
+
+      // Modals
+      const [isModalOpen, setIsModalOpen] = useState(false);
+      const [activeRecipe, setActiveRecipe] = useState(null);
+
+      // New Manual Recipe Form State
+      const [newRecipe, setNewRecipe] = useState({
+        title: '',
+        image: '',
+        ingredients: '',
+        instructions: '',
+        prepTime: '',
+        difficulty: 'קל',
+        dietary: []
+      });
+
+      const showToast = (msg) => {
+        setToastMessage(msg);
+        setTimeout(() => setToastMessage(''), 3500);
+      };
+
+      // Add/Remove ingredients for AI Generator
+      const handleAddAiIngredient = (ing) => {
+        const trimmed = ing.trim();
+        if (trimmed && !aiIngredients.includes(trimmed)) {
+          setAiIngredients([...aiIngredients, trimmed]);
+        }
+      };
+
+      const handleRemoveAiIngredient = (ing) => {
+        setAiIngredients(aiIngredients.filter(i => i !== ing));
+      };
+
+      // Call Gemini API to invent a complete recipe from ingredients
+      const generateRecipeWithAI = async () => {
+        if (aiIngredients.length === 0) {
+          setAiError('אנא בחר או הקלד לפחות מצרך אחד שיש לך בבית.');
+          return;
+        }
+
+        setIsGeneratingAI(true);
+        setAiError('');
+        setGeneratedAiRecipe(null);
+
+        // Smart Local Generator Fallback when API key is missing or fails
+        const generateFallbackRecipe = () => {
+          // Select only 2-4 ingredients for the dish, leave rest as leftovers
+          const shuffled = [...aiIngredients].sort(() => 0.5 - Math.random());
+          const selectedCount = Math.min(Math.max(2, Math.floor(shuffled.length * 0.6)), 4);
+          const selectedForDish = shuffled.slice(0, selectedCount);
+          const leftInFridge = shuffled.slice(selectedCount);
+
+          const mainIng = selectedForDish[0] || "מצרך מרכזי";
+          const subIng = selectedForDish[1] || "תוספת";
+
+          const recipeTitle = `מאפה/מחבת ${mainIng} ו${subIng} מפנק`;
+          
+          return {
+            id: Date.now(),
+            title: recipeTitle,
+            description: `ארוחה קלה ומהירה שמבוססת בעיקר על ${selectedForDish.join(' ו-')}. השארנו את שאר הרכיבים במקרר לארוחה הבאה!`,
+            image: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=800&q=80",
+            ingredients: selectedForDish.map(ing => `חופן/יחידה של ${ing}`),
+            leftoverIngredients: leftInFridge,
+            instructions: [
+              `מכינים ומנקים את ה${selectedForDish.join(' וה-')}.`,
+              `מחממים מחבת/תבנית על אש בינונית עם מעט שמן זית או חמאה.`,
+              `מוסיפים את ה${mainIng} ומטגנים/מאדים כ-5 דקות עד לריכוך ראשוני.`,
+              `משלבים את ${selectedForDish.slice(1).join(', ')} פנימה, מתבלים במלח, פלפל ותבלינים אהובים.`,
+              `מבשלים עוד 5-8 דקות על אש קטנה עד שהמנה מוכנה ומשחמת, ומגישים חם!`
+            ],
+            prepTime: Number(selectedPrepTimeLimit) <= 15 ? 15 : 25,
+            difficulty: "קל",
+            dietary: [selectedDietaryFilter !== 'הכל' ? selectedDietaryFilter : "מהיר וקל"],
+            chefTip: "כדי לשדרג את המנה, מומלץ להוסיף מעט עשבי תיבול טריים או גרידת לימון בסוף הבישול.",
+            likes: 1,
+            isLiked: false,
+            isFavorite: false,
+            comments: [
+              { id: 1, author: "שף AI", text: "בחרתי במיוחד חלק מהמצרכים כדי שלא תצטרך לרוקן את כל המקרר בבת אחת!" }
+            ]
+          };
+        };
+
+        try {
+          const apiKey = ""; // You can insert a Gemini API Key here if available
+          
+          if (!apiKey) {
+            // Simulate short thinking delay and use smart local generator
+            setTimeout(() => {
+              const recipeData = generateFallbackRecipe();
+              setGeneratedAiRecipe(recipeData);
+              showToast('✨ השף AI בחר מצרכים והרכיב לך ארוחה!');
+              setIsGeneratingAI(false);
+            }, 800);
+            return;
+          }
+
+          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+          const systemPrompt = `אתה שף בינלאומי מקצועי שמומחה בהמצאת מתכונים יצירתיים, טעימים ומדויקים מתוך רשימת מצרכים זמינים.
+כלל ברזל חשוב: המשתמש מביא רשימת מצרכים שיש לו במקרר. אל תשתמש בכל המצרכים ביחד במנה אחת! 
+בחר רק 3-4 מצרכים בסיסיים ומתאימים כדי להרכיב ארוחה טעימה וקלה אחת, והשאר את שאר המצרכים בצד לארוחות אחרות במקרר.
+
+החזר אך ורק תשובת JSON במבנה המדויק הבא (ללא תגי markdown וללא טקסט נוסף):
+{
+  "title": "שם המנה היצירתי",
+  "description": "תיאור קצר ומעורר תאבון של המנה",
+  "prepTime": 20,
+  "difficulty": "קל", 
+  "dietary": ["צמחוני", "כשר"],
+  "ingredients": ["מצרך 1 שנבחר עם כמות", "מצרך 2 שנבחר עם כמות"],
+  "leftoverIngredients": ["מצרך 1 שנשאר בצד במקרר", "מצרך 2 שנשאר בצד במקרר"],
+  "instructions": [
+    "שלב 1 להכנה",
+    "שלב 2 להכנה"
+  ],
+  "chefTip": "טיפ זהב מהשף לשדרוג הטעם"
+}`;
+
+          const userPrompt = `יש לי במקרר/במזווה את המצרכים הבאים: ${aiIngredients.join(', ')}.
+אני רוצה מתכון מתאים:
+- סוג ארוחה: ${selectedMealType}
+- הגבלה תזונתית: ${selectedDietaryFilter}
+- זמן הכנה מירבי: עד ${selectedPrepTimeLimit} דקות.
+
+חשוב מאוד: אל תערבב את כל המצרכים ביחד! תבחר רק את הרכיבים שהכי מתאימים לארוחה הזו, ותשאיר את השאר בצד במקרר.`;
+
+          const payload = {
+            contents: [
+              {
+                role: "user",
+                parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }]
+              }
+            ],
+            generationConfig: {
+              responseMimeType: "application/json"
+            }
+          };
+
+          const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          const result = await response.json();
+          const jsonText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+          if (jsonText) {
+            const parsed = JSON.parse(jsonText);
+            const recipeData = {
+              id: Date.now(),
+              title: parsed.title || "מתכון מיוחד מהשף AI",
+              description: parsed.description || "",
+              image: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=800&q=80",
+              ingredients: parsed.ingredients || [],
+              leftoverIngredients: parsed.leftoverIngredients || [],
+              instructions: parsed.instructions || [],
+              prepTime: parsed.prepTime || 20,
+              difficulty: parsed.difficulty || "קל",
+              dietary: parsed.dietary || ["AI שף"],
+              chefTip: parsed.chefTip || "הגישו חם ותיהנו!",
+              likes: 1,
+              isLiked: false,
+              isFavorite: false,
+              comments: [
+                { id: 1, author: "שף AI", text: "בחנתי את המקרר שלך ובחרתי רק את המצרכים המתאימים ביותר לארוחה זו!" }
+              ]
+            };
+            setGeneratedAiRecipe(recipeData);
+            showToast('✨ השף AI בחר מצרכים והכין לך ארוחה!');
+          } else {
+            // Fallback if API returned empty
+            const recipeData = generateFallbackRecipe();
+            setGeneratedAiRecipe(recipeData);
+            showToast('✨ השף AI הכין לך ארוחה מותאמת!');
+          }
+        } catch (err) {
+          console.error("AI Generation Error, switching to fallback:", err);
+          // Fallback on network error
+          const recipeData = generateFallbackRecipe();
+          setGeneratedAiRecipe(recipeData);
+          showToast('✨ השף AI הכין לך ארוחה מותאמת!');
+        } finally {
+          setIsGeneratingAI(false);
+        }
+      };
+
+      // Save generated AI recipe to saved feed
+      const saveAiRecipeToCollection = () => {
+        if (!generatedAiRecipe) return;
+        const exists = recipes.some(r => r.id === generatedAiRecipe.id);
+        if (!exists) {
+          const savedVersion = { ...generatedAiRecipe, isFavorite: true };
+          setRecipes([savedVersion, ...recipes]);
+          showToast('📌 המתכון נשמר בהצלחה לרשימת המתכונים שלך!');
+        } else {
+          showToast('המתכון כבר שמור ברשימה שלך!');
+        }
+      };
+
+      // Filtered Recipes for Browse tab
+      const filteredRecipes = useMemo(() => {
+        return recipes.filter(r => {
+          if (searchQuery && !r.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+          if (onlyFavorites && !r.isFavorite) return false;
+          if (selectedDifficulty !== 'הכל' && r.difficulty !== selectedDifficulty) return false;
+          if (selectedDietary !== 'הכל' && !r.dietary.includes(selectedDietary)) return false;
+          if (maxPrepTime && r.prepTime > Number(maxPrepTime)) return false;
+
+          if (selectedSearchIngredients.length > 0) {
+            const hasMatches = selectedSearchIngredients.some(ing =>
+              r.ingredients.some(rIng => rIng.toLowerCase().includes(ing.toLowerCase()))
+            );
+            if (!hasMatches) return false;
+          }
+          return true;
+        });
+      }, [recipes, searchQuery, selectedSearchIngredients, selectedDifficulty, selectedDietary, maxPrepTime, onlyFavorites]);
+
+      const toggleLike = (id) => {
+        setRecipes(recipes.map(r => r.id === id ? { ...r, likes: r.isLiked ? r.likes - 1 : r.likes + 1, isLiked: !r.isLiked } : r));
+        if (activeRecipe && activeRecipe.id === id) {
+          setActiveRecipe(prev => ({ ...prev, likes: prev.isLiked ? prev.likes - 1 : prev.likes + 1, isLiked: !prev.isLiked }));
+        }
+      };
+
+      const toggleFavorite = (id) => {
+        setRecipes(recipes.map(r => r.id === id ? { ...r, isFavorite: !r.isFavorite } : r));
+        if (activeRecipe && activeRecipe.id === id) {
+          setActiveRecipe(prev => ({ ...prev, isFavorite: !prev.isFavorite }));
+        }
+      };
+
+      const handleAddComment = (recipeId, commentText, authorName) => {
+        if (!commentText.trim()) return;
+        const newCom = { id: Date.now(), author: authorName.trim() || 'אורח/ת', text: commentText.trim() };
+        setRecipes(recipes.map(r => r.id === recipeId ? { ...r, comments: [...r.comments, newCom] } : r));
+        if (activeRecipe && activeRecipe.id === recipeId) {
+          setActiveRecipe(prev => ({ ...prev, comments: [...prev.comments, newCom] }));
+        }
+      };
+
+      const handleCreateRecipe = (e) => {
+        e.preventDefault();
+        if (!newRecipe.title || !newRecipe.ingredients || !newRecipe.instructions) return;
+
+        const created = {
+          id: Date.now(),
+          title: newRecipe.title,
+          image: newRecipe.image || 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?auto=format&fit=crop&w=800&q=80',
+          ingredients: newRecipe.ingredients.split(',').map(i => i.trim()).filter(Boolean),
+          instructions: newRecipe.instructions.split('\n').map(i => i.trim()).filter(Boolean),
+          prepTime: Number(newRecipe.prepTime) || 15,
+          difficulty: newRecipe.difficulty,
+          dietary: newRecipe.dietary,
+          chefTip: "מתכון ביתי מקורי ושווה!",
+          likes: 0,
+          isLiked: false,
+          isFavorite: false,
+          comments: []
+        };
+
+        setRecipes([created, ...recipes]);
+        setIsModalOpen(false);
+        setNewRecipe({ title: '', image: '', ingredients: '', instructions: '', prepTime: '', difficulty: 'קל', dietary: [] });
+        showToast('מתכון חדש פורסם בהצלחה!');
+      };
+
+      return (
+        <div className="min-h-screen flex flex-col bg-gray-50 text-gray-800">
+          {/* Toast Notification */}
+          {toastMessage && (
+            <div className="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-5 py-3 rounded-2xl shadow-2xl z-50 flex items-center gap-3 text-sm font-bold border border-gray-700 animate-bounce">
+              <i className="fa-solid fa-sparkles text-amber-400"></i>
+              <span>{toastMessage}</span>
+            </div>
+          )}
+
+          {/* Top Header */}
+          <header className="bg-emerald-600 text-white shadow-md sticky top-0 z-30">
+            <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center border border-white/20">
+                  <i className="fa-solid fa-hat-chef text-xl text-emerald-200"></i>
+                </div>
+                <div>
+                  <h1 className="text-xl font-black tracking-wide leading-none">מתכונט AI</h1>
+                  <span className="text-[10px] text-emerald-100 font-medium">שף אישי לפי מצרכים בבית</span>
+                </div>
+              </div>
+
+              {/* Navigation Tabs */}
+              <div className="flex items-center bg-emerald-700/60 p-1 rounded-xl border border-emerald-500/30 text-xs font-bold">
+                <button
+                  onClick={() => setActiveTab('generator')}
+                  className={`px-3 py-2 rounded-lg transition flex items-center gap-1.5 cursor-pointer ${activeTab === 'generator' ? 'bg-white text-emerald-800 shadow' : 'text-emerald-100 hover:text-white'}`}
+                >
+                  <i className="fa-solid fa-wand-magic-sparkles text-amber-400"></i>
+                  <span>שף AI מחולל</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('browse')}
+                  className={`px-3 py-2 rounded-lg transition flex items-center gap-1.5 cursor-pointer ${activeTab === 'browse' ? 'bg-white text-emerald-800 shadow' : 'text-emerald-100 hover:text-white'}`}
+                >
+                  <i className="fa-solid fa-book-open"></i>
+                  <span>כל המתכונים ({recipes.length})</span>
+                </button>
+              </div>
+
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="hidden sm:flex bg-emerald-500 text-white hover:bg-emerald-400 px-3 py-2 rounded-xl font-bold shadow transition items-center gap-2 text-xs border border-emerald-400 cursor-pointer"
+              >
+                <i className="fa-solid fa-plus"></i>
+                <span>הוסף מתכון</span>
+              </button>
+            </div>
+          </header>
+
+          {/* TAB 1: AI CHEF GENERATOR */}
+          {activeTab === 'generator' && (
+            <main className="max-w-5xl mx-auto px-4 py-8 flex-1 w-full space-y-8">
+              {/* Intro Hero Banner */}
+              <div className="bg-gradient-to-r from-emerald-800 via-emerald-700 to-teal-900 text-white p-6 md:p-8 rounded-3xl shadow-xl border border-emerald-600/30 relative overflow-hidden">
+                <div className="absolute top-0 left-0 -mt-10 -ml-10 w-40 h-40 bg-emerald-400/10 rounded-full blur-3xl"></div>
+                <div className="relative z-10 max-w-2xl">
+                  <span className="bg-amber-400/20 text-amber-300 text-xs font-black px-3 py-1 rounded-full border border-amber-400/30 inline-flex items-center gap-1.5 mb-3">
+                    <i className="fa-solid fa-brain"></i> מונע ע"י Gemini AI
+                  </span>
+                  <h2 className="text-2xl md:text-3xl font-black mb-2">אמור לשף AI מה יש לך במקרר – והוא ימציא מתכון!</h2>
+                  <p className="text-emerald-100 text-sm leading-relaxed">
+                    במקום לחפש שעות באינטרנט, פשוט רשום או לחץ על המצרכים שנמצאו אצלך בבית. ה-AI מכיר אלפי מתכונים מכל העולם ויבנה לך מנה מנצחת ומדויקת תוך שניות!
+                  </p>
+                </div>
+              </div>
+
+              {/* Input Box for AI Ingredients */}
+              <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 space-y-6">
+                <div>
+                  <label className="block text-sm font-bold text-gray-800 mb-2 flex items-center gap-2">
+                    <i className="fa-solid fa-basket-shopping text-emerald-600"></i>
+                    <span>איזה מצרכים יש לך במטבח?</span>
+                  </label>
+                  
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="הקלד מצרך (למשל: תפוחי אדמה, פטריות, שמנת...)"
+                      value={customIngredientInput}
+                      onChange={(e) => setCustomIngredientInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddAiIngredient(customIngredientInput);
+                          setCustomIngredientInput('');
+                        }
+                      }}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleAddAiIngredient(customIngredientInput);
+                        setCustomIngredientInput('');
+                      }}
+                      className="bg-emerald-600 text-white px-5 py-3 rounded-2xl font-bold text-sm hover:bg-emerald-700 transition cursor-pointer flex-shrink-0"
+                    >
+                      הוסף
+                    </button>
+                  </div>
+                </div>
+
+                {/* Selected Ingredients Badges */}
+                <div>
+                  <span className="block text-xs font-bold text-gray-500 mb-2">מצרכים שנבחרו להתאמה:</span>
+                  <div className="flex flex-wrap gap-2 min-h-[40px] p-3 bg-gray-50 rounded-2xl border border-gray-100">
+                    {aiIngredients.map((ing) => (
+                      <span key={ing} className="bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-2 shadow-sm animate-fade-in">
+                        <span>{ing}</span>
+                        <button onClick={() => handleRemoveAiIngredient(ing)} className="hover:text-red-200 cursor-pointer">
+                          <i className="fa-solid fa-xmark"></i>
+                        </button>
+                      </span>
+                    ))}
+                    {aiIngredients.length === 0 && (
+                      <p className="text-xs text-gray-400 self-center">עדיין לא נבחרו מצרכים. לחץ על התגיות למטה או הקלד מצרך למעלה.</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Quick Add Popular Ingredients */}
+                <div>
+                  <span className="block text-xs font-bold text-gray-500 mb-2">בלחיצה מהירה – מצרכים נפוצים:</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {POPULAR_INGREDIENTS.map((ing) => {
+                      const isSelected = aiIngredients.includes(ing);
+                      return (
+                        <button
+                          key={ing}
+                          type="button"
+                          onClick={() => isSelected ? handleRemoveAiIngredient(ing) : handleAddAiIngredient(ing)}
+                          className={`text-xs px-3 py-1.5 rounded-xl font-medium transition cursor-pointer ${
+                            isSelected
+                              ? 'bg-emerald-100 text-emerald-800 border-2 border-emerald-500 font-bold'
+                              : 'bg-white text-gray-600 border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/50'
+                          }`}
+                        >
+                          {isSelected ? '✓ ' : '+ '}{ing}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Preferences */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-gray-100">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">סוג ארוחה</label>
+                    <select
+                      value={selectedMealType}
+                      onChange={(e) => setSelectedMealType(e.target.value)}
+                      className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-xs bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer font-medium"
+                    >
+                      {MEAL_TYPES.map(m => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">הגבלה תזונתית</label>
+                    <select
+                      value={selectedDietaryFilter}
+                      onChange={(e) => setSelectedDietaryFilter(e.target.value)}
+                      className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-xs bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer font-medium"
+                    >
+                      <option value="הכל">ללא הגבלה</option>
+                      {DIETARY_OPTIONS.map(d => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">זמן הכנה מקסימלי</label>
+                    <select
+                      value={selectedPrepTimeLimit}
+                      onChange={(e) => setSelectedPrepTimeLimit(e.target.value)}
+                      className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-xs bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer font-medium"
+                    >
+                      <option value="15">עד 15 דקות (מהיר מאוד)</option>
+                      <option value="30">עד 30 דקות</option>
+                      <option value="60">עד שעה</option>
+                      <option value="120">אין מגבלה</option>
+                    </select>
+                  </div>
+                </div>
+
+                {aiError && (
+                  <p className="text-xs text-red-500 font-bold bg-red-50 p-3 rounded-xl border border-red-100 flex items-center gap-2">
+                    <i className="fa-solid fa-circle-exclamation"></i>
+                    <span>{aiError}</span>
+                  </p>
+                )}
+
+                {/* Submit Action Button */}
+                <button
+                  type="button"
+                  onClick={generateRecipeWithAI}
+                  disabled={isGeneratingAI}
+                  className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black py-4 rounded-2xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-3 text-base cursor-pointer disabled:opacity-50"
+                >
+                  {isGeneratingAI ? (
+                    <>
+                      <i className="fa-solid fa-spinner fa-spin text-xl"></i>
+                      <span>השף AI חושב וממציא מתכון...</span>
+                    </>
+                  ) : (
+                    <>
+                      <i className="fa-solid fa-wand-magic-sparkles text-amber-300 text-lg"></i>
+                      <span>צור מתכון מותאם אישית ב-AI</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Generated AI Recipe Output Card */}
+              {generatedAiRecipe && (
+                <div className="bg-white rounded-3xl shadow-xl border-2 border-emerald-500/30 overflow-hidden animate-fade-in">
+                  <div className="bg-gradient-to-r from-emerald-700 to-teal-800 text-white p-6 relative">
+                    <span className="bg-amber-400 text-amber-950 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider inline-block mb-2">
+                      ✨ מתכון חדש נוצר עבורך
+                    </span>
+                    <h3 className="text-2xl md:text-3xl font-black">{generatedAiRecipe.title}</h3>
+                    <p className="text-emerald-100 text-sm mt-1">{generatedAiRecipe.description}</p>
+
+                    <div className="flex flex-wrap gap-4 text-xs font-bold text-emerald-200 mt-4 pt-3 border-t border-emerald-600/50">
+                      <span><i className="fa-regular fa-clock ml-1 text-amber-300"></i>{generatedAiRecipe.prepTime} דקות הכנה</span>
+                      <span><i className="fa-solid fa-signal ml-1 text-amber-300"></i>דרגת קושי: {generatedAiRecipe.difficulty}</span>
+                      <span><i className="fa-solid fa-leaf ml-1 text-amber-300"></i>{generatedAiRecipe.dietary.join(', ')}</span>
+                    </div>
+                  </div>
+
+                  <div className="p-6 md:p-8 space-y-6">
+                    {/* Ingredients List */}
+                    <div>
+                      <h4 className="text-base font-bold text-emerald-800 mb-3 flex items-center gap-2">
+                        <i className="fa-solid fa-list-check"></i>
+                        <span>מצרכים שנבחרו לארוחה זו:</span>
+                      </h4>
+                      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-700 bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100">
+                        {generatedAiRecipe.ingredients.map((ing, idx) => (
+                          <li key={idx} className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            <span className="font-medium">{ing}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Leftover Ingredients Display */}
+                    {generatedAiRecipe.leftoverIngredients && generatedAiRecipe.leftoverIngredients.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-bold text-gray-600 mb-2 flex items-center gap-2">
+                          <i className="fa-solid fa-box-archive text-amber-500"></i>
+                          <span>מצרכים שנשארו בצד במקרר לארוחה הבאה:</span>
+                        </h4>
+                        <div className="flex flex-wrap gap-2 bg-gray-50 p-3 rounded-2xl border border-gray-100 text-xs">
+                          {generatedAiRecipe.leftoverIngredients.map((leftover, idx) => (
+                            <span key={idx} className="bg-white text-gray-600 border border-gray-200 px-3 py-1 rounded-xl font-medium">
+                              ❄️ {leftover}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Step by Step Instructions */}
+                    <div>
+                      <h4 className="text-base font-bold text-emerald-800 mb-3 flex items-center gap-2">
+                        <i className="fa-solid fa-fire-burner"></i>
+                        <span>שלבי הכנה פשוטים:</span>
+                      </h4>
+                      <ol className="space-y-3 text-sm text-gray-700">
+                        {generatedAiRecipe.instructions.map((step, idx) => (
+                          <li key={idx} className="flex gap-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                            <span className="w-6 h-6 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center flex-shrink-0">
+                              {idx + 1}
+                            </span>
+                            <span className="leading-relaxed font-medium">{step}</span>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+
+                    {/* Chef Tip */}
+                    {generatedAiRecipe.chefTip && (
+                      <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex items-start gap-3">
+                        <i className="fa-solid fa-lightbulb text-amber-500 text-xl mt-0.5"></i>
+                        <div>
+                          <span className="font-bold text-amber-900 text-xs block">טיפ מהשף AI:</span>
+                          <p className="text-xs text-amber-800 font-medium">{generatedAiRecipe.chefTip}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Save Action */}
+                    <div className="pt-4 border-t border-gray-100 flex justify-end">
+                      <button
+                        onClick={saveAiRecipeToCollection}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-2xl font-bold text-sm shadow transition flex items-center gap-2 cursor-pointer"
+                      >
+                        <i className="fa-solid fa-bookmark"></i>
+                        <span>שמור מתכון זה לרשימה שלי</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </main>
+          )}
+
+          {/* TAB 2: BROWSE RECIPES */}
+          {activeTab === 'browse' && (
+            <main className="max-w-7xl mx-auto px-4 py-8 flex-1 w-full grid grid-cols-1 lg:grid-cols-4 gap-8">
+              {/* Sidebar Filters */}
+              <aside className="lg:col-span-1 space-y-6">
+                {/* Search & Filter Card */}
+                <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+                  <h2 className="text-base font-bold text-emerald-700 flex items-center gap-2">
+                    <i className="fa-solid fa-filter"></i>
+                    <span>סינון מתכונים</span>
+                  </h2>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-600 mb-1">חיפוש לפי שם</label>
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="הקלד שם מנה..."
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-gray-50">
+                    <span className="text-xs font-bold text-gray-700">מועדפים בלבד</span>
+                    <button
+                      onClick={() => setOnlyFavorites(!onlyFavorites)}
+                      className={`w-11 h-6 rounded-full p-1 transition-colors cursor-pointer ${onlyFavorites ? 'bg-emerald-600' : 'bg-gray-200'}`}
+                    >
+                      <div className={`w-4 h-4 rounded-full bg-white transition-transform ${onlyFavorites ? 'transform -translate-x-5' : ''}`}></div>
+                    </button>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-600 mb-1">רמת קושי</label>
+                    <select
+                      value={selectedDifficulty}
+                      onChange={(e) => setSelectedDifficulty(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs bg-white"
+                    >
+                      <option value="הכל">כל הרמות</option>
+                      <option value="קל">קל</option>
+                      <option value="בינוני">בינוני</option>
+                      <option value="קשה">קשה</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-600 mb-1">מגבלה תזונתית</label>
+                    <select
+                      value={selectedDietary}
+                      onChange={(e) => setSelectedDietary(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs bg-white"
+                    >
+                      <option value="הכל">ללא הגבלה</option>
+                      {DIETARY_OPTIONS.map(d => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-600 mb-1">זמן הכנה מרבי (דקות)</label>
+                    <input
+                      type="number"
+                      placeholder="לדוגמה: 30"
+                      value={maxPrepTime}
+                      onChange={(e) => setMaxPrepTime(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs"
+                    />
+                  </div>
+                </div>
+              </aside>
+
+              {/* Recipe Cards List */}
+              <section className="lg:col-span-3">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-black text-gray-800">
+                    מתכונים ({filteredRecipes.length})
+                  </h2>
+                </div>
+
+                {filteredRecipes.length === 0 ? (
+                  <div className="bg-white rounded-2xl p-12 text-center border border-gray-100 shadow-sm">
+                    <i className="fa-solid fa-utensils text-4xl text-gray-300 mb-3"></i>
+                    <p className="text-gray-500 font-medium">לא נמצאו מתכונים מתאימים לפילטור שלך.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {filteredRecipes.map((recipe) => (
+                      <div key={recipe.id} className="bg-white rounded-2xl shadow-sm hover:shadow-md transition border border-gray-100 overflow-hidden flex flex-col justify-between">
+                        <div>
+                          <div className="relative h-48 w-full overflow-hidden bg-gray-100">
+                            <img src={recipe.image} alt={recipe.title} className="w-full h-full object-cover" />
+                            <button
+                              onClick={() => toggleFavorite(recipe.id)}
+                              className="absolute top-3 left-3 bg-white/80 backdrop-blur-sm p-2 rounded-full shadow hover:bg-white transition cursor-pointer"
+                            >
+                              <i className={`fa-solid fa-bookmark ${recipe.isFavorite ? 'text-amber-500' : 'text-gray-400'}`}></i>
+                            </button>
+                          </div>
+
+                          <div className="p-4">
+                            <h3 className="font-bold text-base mb-2 line-clamp-1">{recipe.title}</h3>
+                            <div className="flex items-center gap-3 text-xs text-gray-500 mb-3 font-medium">
+                              <span><i className="fa-regular fa-clock ml-1"></i>{recipe.prepTime} דק'</span>
+                              <span><i className="fa-solid fa-signal ml-1"></i>{recipe.difficulty}</span>
+                            </div>
+
+                            <div className="flex flex-wrap gap-1 mb-3">
+                              {recipe.dietary.map(d => (
+                                <span key={d} className="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-lg border border-emerald-100">
+                                  {d}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+                          <button
+                            onClick={() => toggleLike(recipe.id)}
+                            className="flex items-center gap-1.5 text-xs font-bold text-gray-600 hover:text-red-500 cursor-pointer"
+                          >
+                            <i className={`fa-solid fa-heart ${recipe.isLiked ? 'text-red-500' : 'text-gray-400'}`}></i>
+                            <span>{recipe.likes}</span>
+                          </button>
+
+                          <button
+                            onClick={() => setActiveRecipe(recipe)}
+                            className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 cursor-pointer"
+                          >
+                            <span>הצג מתכון</span>
+                            <i className="fa-solid fa-arrow-left text-[10px]"></i>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            </main>
+          )}
+
+          {/* Modal: View Recipe Details */}
+          {activeRecipe && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl p-6 relative">
+                <button
+                  onClick={() => setActiveRecipe(null)}
+                  className="absolute top-4 left-4 bg-gray-100 p-2 rounded-full hover:bg-gray-200 cursor-pointer"
+                >
+                  <i className="fa-solid fa-xmark w-4 h-4 flex items-center justify-center"></i>
+                </button>
+
+                <img src={activeRecipe.image} alt={activeRecipe.title} className="w-full h-56 object-cover rounded-2xl mb-4" />
+
+                <h2 className="text-2xl font-black text-gray-800 mb-1">{activeRecipe.title}</h2>
+                <div className="flex gap-3 text-xs text-gray-500 font-bold mb-4">
+                  <span>זמן הכנה: {activeRecipe.prepTime} דקות</span>
+                  <span>•</span>
+                  <span>קושי: {activeRecipe.difficulty}</span>
+                </div>
+
+                <div className="mb-4">
+                  <h3 className="font-bold text-sm text-emerald-800 mb-2">מצרכים:</h3>
+                  <ul className="list-disc list-inside space-y-1 text-xs text-gray-700">
+                    {activeRecipe.ingredients.map((ing, i) => <li key={i}>{ing}</li>)}
+                  </ul>
+                </div>
+
+                <div className="mb-6">
+                  <h3 className="font-bold text-sm text-emerald-800 mb-2">שלבי הכנה:</h3>
+                  <ol className="list-decimal list-inside space-y-1.5 text-xs text-gray-700">
+                    {activeRecipe.instructions.map((step, i) => <li key={i}>{step}</li>)}
+                  </ol>
+                </div>
+
+                {/* Comments Section */}
+                <div className="pt-4 border-t border-gray-100">
+                  <h3 className="font-bold text-sm text-gray-800 mb-3">תגובות ({activeRecipe.comments.length})</h3>
+                  <div className="space-y-2 mb-3">
+                    {activeRecipe.comments.map(c => (
+                      <div key={c.id} className="bg-gray-50 p-2.5 rounded-xl text-xs">
+                        <span className="font-bold text-gray-800 block mb-0.5">{c.author}</span>
+                        <p className="text-gray-600">{c.text}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    handleAddComment(activeRecipe.id, e.target.comment.value, e.target.author.value);
+                    e.target.reset();
+                  }} className="space-y-2">
+                    <input name="author" type="text" placeholder="השם שלך" className="w-full text-xs p-2 border border-gray-200 rounded-xl" />
+                    <textarea name="comment" rows="2" placeholder="הוסף תגובה..." className="w-full text-xs p-2 border border-gray-200 rounded-xl" required></textarea>
+                    <button type="submit" className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-emerald-700 cursor-pointer">
+                      שלח תגובה
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Modal: Add New Manual Recipe */}
+          {isModalOpen && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-3xl max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl p-6 relative">
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="absolute top-4 left-4 bg-gray-100 p-2 rounded-full hover:bg-gray-200 cursor-pointer"
+                >
+                  <i className="fa-solid fa-xmark w-4 h-4 flex items-center justify-center"></i>
+                </button>
+
+                <h2 className="text-xl font-black text-gray-800 mb-4">הוספת מתכון חדש</h2>
+
+                <form onSubmit={handleCreateRecipe} className="space-y-3 text-xs font-bold">
+                  <div>
+                    <label className="block text-gray-700 mb-1">שם המנה</label>
+                    <input
+                      type="text"
+                      required
+                      value={newRecipe.title}
+                      onChange={e => setNewRecipe({ ...newRecipe, title: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-700 mb-1">קישור לתמונה (URL)</label>
+                    <input
+                      type="url"
+                      placeholder="https://..."
+                      value={newRecipe.image}
+                      onChange={e => setNewRecipe({ ...newRecipe, image: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-700 mb-1">מצרכים (מופרדים בפסיקים)</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="קמח, סוכר, ביצים..."
+                      value={newRecipe.ingredients}
+                      onChange={e => setNewRecipe({ ...newRecipe, ingredients: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-700 mb-1">שלבי הכנה (כל שלב בשורה חדשה)</label>
+                    <textarea
+                      required
+                      rows="3"
+                      value={newRecipe.instructions}
+                      onChange={e => setNewRecipe({ ...newRecipe, instructions: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl"
+                    ></textarea>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-gray-700 mb-1">זמן הכנה (דקות)</label>
+                      <input
+                        type="number"
+                        required
+                        value={newRecipe.prepTime}
+                        onChange={e => setNewRecipe({ ...newRecipe, prepTime: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-xl"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-gray-700 mb-1">רמת קושי</label>
+                      <select
+                        value={newRecipe.difficulty}
+                        onChange={e => setNewRecipe({ ...newRecipe, difficulty: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-xl bg-white"
+                      >                        <option value="קל">קל</option>
+                        <option value="בינוני">בינוני</option>
+                        <option value="קשה">קשה</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full bg-emerald-600 text-white py-3 rounded-xl font-black text-sm hover:bg-emerald-700 transition cursor-pointer mt-2"
+                  >
+                    פרסם מתכון
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

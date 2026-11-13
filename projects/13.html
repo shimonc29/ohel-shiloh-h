@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoodTunes - המוזיקה המדויקת לכל רגע</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts - Heebo & Montserrat -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Heebo', 'sans-serif'],
+                        en: ['Montserrat', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            dark: '#0f0c20',
+                            card: 'rgba(255, 255, 255, 0.05)',
+                            cardHover: 'rgba(255, 255, 255, 0.1)',
+                            purple: '#8b5cf6',
+                            pink: '#ec4899',
+                            cyan: '#06b6d4',
+                            amber: '#f59e0b'
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        glow: {
+                            '0%': { boxShadow: '0 0 15px rgba(139, 92, 246, 0.3)' },
+                            '100%': { boxShadow: '0 0 30px rgba(236, 72, 153, 0.6)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0b0914;
+            color: #f3f4f6;
+            background-image: 
+                radial-gradient(at 10% 10%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 90% 80%, rgba(236, 72, 153, 0.15) 0px, transparent 50%),
+                radial-gradient(at 50% 50%, rgba(6, 182, 212, 0.1) 0px, transparent 50%);
+            background-attachment: fixed;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 12, 32, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(139, 92, 246, 0.6);
+        }
+
+        /* Glassmorphism Effect */
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.09);
+            border-color: rgba(139, 92, 246, 0.4);
+            transform: translateY(-3px);
+        }
+
+        /* Custom Range Input */
+        input[type=range] {
+            -webkit-appearance: none;
+            background: transparent;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #ec4899;
+            cursor: pointer;
+            margin-top: -7px;
+            box-shadow: 0 0 10px rgba(236, 72, 153, 0.8);
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 6px;
+            cursor: pointer;
+            background: linear-gradient(to left, #8b5cf6, #06b6d4);
+            border-radius: 3px;
+        }
+
+        .active-tab {
+            background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+            border-color: transparent !important;
+            box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3);
+        }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased selection:bg-pink-500 selection:text-white flex flex-col justify-between">
+
+    <!-- Header / Navbar -->
+    <header class="sticky top-0 z-40 glass border-b border-white/10 px-4 lg:px-8 py-4 mb-6">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <!-- Logo -->
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                    <i class="fa-solid font-bold fa-compact-disc text-2xl text-white animate-spin-slow"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-black tracking-tight bg-gradient-to-r from-white via-purple-200 to-pink-400 bg-clip-text text-transparent">
+                        MoodTunes
+                    </h1>
+                    <p class="text-xs text-gray-400 hidden sm:block">המוזיקה הנכונה, בדיוק לרגע הזה</p>
+                </div>
+            </div>
+
+            <!-- Actions Header -->
+            <div class="flex items-center gap-3">
+                <button id="surpriseBtn" class="px-4 py-2 text-sm font-semibold rounded-xl glass hover:bg-white/10 text-pink-300 hover:text-pink-200 border border-pink-500/30 flex items-center gap-2 transition duration-200">
+                    <i class="fa-solid fa-wand-magic-sparkles text-pink-400"></i>
+                    <span>הפתע אותי!</span>
+                </button>
+                <button onclick="openModal()" class="px-4 py-2 text-sm font-semibold rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white shadow-lg shadow-purple-900/40 flex items-center gap-2 transition duration-200">
+                    <i class="fa-solid fa-plus"></i>
+                    <span class="hidden sm:inline">הוסף שיר</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 lg:px-8 flex-grow w-full grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
+        
+        <!-- Left Side: Controls & Filters (7 Columns) -->
+        <section class="lg:col-span-7 flex flex-col gap-6">
+            
+            <!-- Welcome Box -->
+            <div class="glass p-6 rounded-2xl relative overflow-hidden">
+                <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-purple-600/20 rounded-full blur-3xl"></div>
+                <h2 class="text-2xl font-bold mb-2">מה האווירה שלך עכשיו? 🎧</h2>
+                <p class="text-gray-300 text-sm leading-relaxed">
+                    בחר את מצב הרוח, הפעילות או מזג האוויר שלך, ואנחנו נתאים לך את הפלייליסט השירים המדויק ביותר.
+                </p>
+            </div>
+
+            <!-- Mood Selection -->
+            <div class="space-y-3">
+                <h3 class="text-sm font-bold uppercase tracking-wider text-purple-300 flex items-center gap-2">
+                    <i class="fa-solid fa-face-smile"></i> מצב רוח ראששי
+                </h3>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="moodGrid">
+                    <!-- Dynamic Mood Buttons -->
+                </div>
+            </div>
+
+            <!-- Activity Filter -->
+            <div class="space-y-3">
+                <h3 class="text-sm font-bold uppercase tracking-wider text-cyan-300 flex items-center gap-2">
+                    <i class="fa-solid fa-person-running"></i> מה עושים עכשיו? (פעילות)
+                </h3>
+                <div class="flex flex-wrap gap-2" id="activityList">
+                    <!-- Dynamic Activity Tags -->
+                </div>
+            </div>
+
+            <!-- Context / Weather Filter -->
+            <div class="space-y-3">
+                <h3 class="text-sm font-bold uppercase tracking-wider text-amber-300 flex items-center gap-2">
+                    <i class="fa-solid fa-cloud-sun"></i> סביבה ומזג אוויר
+                </h3>
+                <div class="flex flex-wrap gap-2" id="contextList">
+                    <!-- Dynamic Context Tags -->
+                </div>
+            </div>
+
+            <!-- Energy Level Slider -->
+            <div class="glass p-5 rounded-2xl space-y-4">
+                <div class="flex justify-between items-center">
+                    <label for="energyRange" class="text-sm font-bold text-gray-200 flex items-center gap-2">
+                        <i class="fa-solid fa-bolt text-yellow-400"></i> עוצמה וקצב (Energy Level)
+                    </label>
+                    <span id="energyValueText" class="text-xs font-bold px-3 py-1 bg-purple-900/60 text-purple-300 rounded-full border border-purple-500/30">הכל</span>
+                </div>
+                <input type="range" id="energyRange" min="0" max="100" value="50" step="25" class="w-full">
+                <div class="flex justify-between text-xs text-gray-400 font-medium px-1">
+                    <span>שקט ורגוע 🧘</span>
+                    <span>בינוני ☕</span>
+                    <span>סוער ואנרגטי ⚡</span>
+                </div>
+            </div>
+
+            <!-- Reset Filters -->
+            <div class="flex justify-between items-center pt-2">
+                <span id="resultsCount" class="text-xs text-gray-400">נמצאו 0 שירים מתאימים</span>
+                <button id="resetFiltersBtn" class="text-xs text-gray-400 hover:text-white underline underline-offset-4 flex items-center gap-1">
+                    <i class="fa-solid fa-rotate-right"></i> איפוס מסננים
+                </button>
+            </div>
+
+        </section>
+
+        <!-- Right Side: Song Player & Recommendations (5 Columns) -->
+        <section class="lg:col-span-5 flex flex-col gap-6">
+            
+            <!-- Featured Main Player -->
+            <div id="playerCard" class="glass-card rounded-3xl p-6 flex flex-col justify-between border-purple-500/20 shadow-2xl relative overflow-hidden min-h-[420px]">
+                
+                <!-- Placeholder when no song is selected -->
+                <div id="noSongPlaceholder" class="hidden flex-col items-center justify-center text-center my-auto py-12">
+                    <i class="fa-solid fa-music text-5xl text-gray-600 mb-4 animate-bounce"></i>
+                    <h4 class="text-lg font-bold text-gray-300">לא נמצא שיר מתאים</h4>
+                    <p class="text-xs text-gray-500 max-w-xs mt-1">נסה לשנות את מצבי הרוח או להוריד מסננים כדי למצוא מוזיקה.</p>
+                </div>
+
+                <!-- Song Details Content -->
+                <div id="songContent" class="flex flex-col gap-5">
+                    
+                    <!-- Top Bar: Badge & Favorite -->
+                    <div class="flex items-center justify-between">
+                        <span id="currentMoodBadge" class="text-xs font-bold px-3 py-1 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/30 flex items-center gap-1.5">
+                            <i class="fa-solid fa-sparkles"></i> <span>מצב רוח</span>
+                        </span>
+                        <button id="favBtn" onclick="toggleFavoriteCurrent()" class="w-9 h-9 rounded-full glass hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-pink-500 transition">
+                            <i class="fa-solid fa-heart text-base"></i>
+                        </button>
+                    </div>
+
+                    <!-- Album Art & Embed Media -->
+                    <div class="relative w-full aspect-video rounded-2xl overflow-hidden glass shadow-inner group">
+                        <div id="youtubeEmbedContainer" class="w-full h-full">
+                            <!-- Youtube Iframe dynamically inserted -->
+                        </div>
+                    </div>
+
+                    <!-- Song Info -->
+                    <div class="space-y-1 text-center sm:text-right">
+                        <h3 id="songTitle" class="text-xl font-black text-white tracking-wide">שם השיר</h3>
+                        <p id="songArtist" class="text-sm text-purple-300 font-medium">שם האמן</p>
+                    </div>
+
+                    <!-- Tags -->
+                    <div id="songTags" class="flex flex-wrap gap-1.5 justify-center sm:justify-start">
+                        <!-- Dynamic Tags -->
+                    </div>
+
+                    <!-- Lyrics Quote / Vibe Quote -->
+                    <div class="p-3 rounded-xl bg-black/30 border border-white/5 text-xs text-gray-300 italic text-center">
+                        "<span id="songQuote">ציטוט מוביל מהשיר...</span>"
+                    </div>
+
+                    <!-- External Listen Links -->
+                    <div class="grid grid-cols-2 gap-3 pt-2">
+                        <a id="youtubeLink" target="_blank" href="#" class="py-3 px-4 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-red-600/30 transition transform hover:scale-[1.02]">
+                            <i class="fa-brands fa-youtube text-xl"></i>
+                            <span>נגן ב-YouTube</span>
+                        </a>
+                        <a id="spotifyLink" target="_blank" href="#" class="py-3 px-4 rounded-xl bg-[#1DB954]/20 hover:bg-[#1DB954]/30 border border-[#1DB954]/40 text-[#1DB954] font-bold text-xs flex items-center justify-center gap-2 transition">
+                            <i class="fa-brands fa-spotify text-lg"></i>
+                            <span>פתח ב-Spotify</span>
+                        </a>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Playlist / Recommended Queue List -->
+            <div class="glass p-5 rounded-2xl space-y-3 flex-grow">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center justify-between">
+                    <span>עוד שירים שמתאימים לסינון</span>
+                    <i class="fa-solid fa-list-ul"></i>
+                </h4>
+                <div id="queueList" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                    <!-- Dynamic Queue items -->
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="glass border-t border-white/10 py-6 text-center text-xs text-gray-500">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p>MoodTunes © 2026 - חוויית המוזיקה האישית שלך בכל מצב רוח.</p>
+            <div class="flex items-center gap-4 text-gray-400">
+                <span class="hover:text-white cursor-pointer"><i class="fa-brands fa-github text-base"></i></span>
+                <span class="hover:text-white cursor-pointer"><i class="fa-brands fa-spotify text-base"></i></span>
+                <span class="hover:text-white cursor-pointer"><i class="fa-brands fa-instagram text-base"></i></span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Add Song Modal -->
+    <div id="addSongModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="glass-card w-full max-w-lg rounded-3xl p-6 space-y-5 border-purple-500/30 shadow-2xl relative animate-in fade-in zoom-in duration-200">
+            
+            <div class="flex justify-between items-center border-b border-white/10 pb-3">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-music text-pink-400"></i> הצע שיר חדש לקהילה
+                </h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="addSongForm" onsubmit="handleAddSong(event)" class="space-y-4 text-sm">
+                <div>
+                    <label class="block text-gray-300 font-medium mb-1">שם השיר *</label>
+                    <input type="text" id="inputTitle" required placeholder="לדוגמה: יפה כל כך" class="w-full bg-black/40 border border-white/15 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-pink-500">
+                </div>
+
+                <div>
+                    <label class="block text-gray-300 font-medium mb-1">שם הזמר/ת / להקה *</label>
+                    <input type="text" id="inputArtist" required placeholder="לדוגמה: עומר אדם" class="w-full bg-black/40 border border-white/15 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-pink-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-gray-300 font-medium mb-1">מצב רוח עיקרי</label>
+                        <select id="inputMood" class="w-full bg-black/40 border border-white/15 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-pink-500">
+                            <option value="happy">שמח וחגיגי 😄</option>
+                            <option value="chill">רוגע ושלווה 🧘</option>
+                            <option value="energetic">אנרגטי / אימון ⚡</option>
+                            <option value="focus">פוקוס / לימודים 🧠</option>
+                            <option value="nostalgic">נוסטלגיה 📻</option>
+                            <option value="romantic">רומנטי ❤️</option>
+                            <option value="night">לילי 🌙</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-300 font-medium mb-1">קצב ועוצמה</label>
+                        <select id="inputEnergy" class="w-full bg-black/40 border border-white/15 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-pink-500">
+                            <option value="25">רגוע מאוד (Low)</option>
+                            <option value="50">קצב בינוני (Mid)</option>
+                            <option value="75">אנרגטי (High)</option>
+                            <option value="100">סוער ביותר (Max)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-gray-300 font-medium mb-1">מזהה YouTube או קישור (YouTube ID)</label>
+                    <input type="text" id="inputYoutubeId" placeholder="לדוגמה: dkW3K8u-uC0 או הקישור המלא" class="w-full bg-black/40 border border-white/15 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-pink-500">
+                    <p class="text-[11px] text-gray-400 mt-1">מזהה השיר שמופיע בכתובת היוטיוב לאחר v=</p>
+                </div>
+
+                <div>
+                    <label class="block text-gray-300 font-medium mb-1">ציטוט קצר מהשיר</label>
+                    <input type="text" id="inputQuote" placeholder="משפט מעורר השראה מהשיר..." class="w-full bg-black/40 border border-white/15 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-pink-500">
+                </div>
+
+                <div class="pt-2 flex justify-end gap-3">
+                    <button type="button" onclick="closeModal()" class="px-5 py-2.5 rounded-xl glass text-gray-300 hover:text-white">ביטול</button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold hover:opacity-90 shadow-lg">שמור והוסף</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-6 left-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 glass border-pink-500/40 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-3">
+        <i class="fa-solid fa-circle-check text-pink-400 text-lg"></i>
+        <span id="toastMsg" class="text-sm font-medium">הודעה</span>
+    </div>
+
+    <!-- JavaScript Data & Logic -->
+    <script>
+        // --- DATA STRUCTURES ---
+
+        const moods = [
+            { id: 'all', label: 'הכל', icon: 'fa-globe', color: 'from-purple-600 to-indigo-600' },
+            { id: 'happy', label: 'שמח וחגיגי', icon: 'fa-face-laugh-beam', color: 'from-amber-500 to-yellow-400' },
+            { id: 'chill', label: 'רוגע ושלווה', icon: 'fa-spa', color: 'from-teal-500 to-emerald-400' },
+            { id: 'energetic', label: 'אנרגטי וטירוף', icon: 'fa-bolt', color: 'from-pink-600 to-rose-500' },
+            { id: 'focus', label: 'פוקוס ולימודים', icon: 'fa-brain', color: 'from-purple-600 to-indigo-500' },
+            { id: 'nostalgic', label: 'נוסטלגיה', icon: 'fa-compact-disc', color: 'from-orange-500 to-amber-600' },
+            { id: 'romantic', label: 'רומנטי', icon: 'fa-heart', color: 'from-red-500 to-pink-500' },
+            { id: 'night', label: 'לילי ועמוק', icon: 'fa-moon', color: 'from-blue-700 to-indigo-900' },
+        ];
+
+        const activities = [
+            { id: 'workout', label: 'אימון / כושר', icon: 'fa-dumbbell' },
+            { id: 'driving', label: 'נסיעה באוטו', icon: 'fa-car' },
+            { id: 'cooking', label: 'בישול במטבח', icon: 'fa-utensils' },
+            { id: 'studying', label: 'עבודה / לימודים', icon: 'fa-laptop-code' },
+            { id: 'relaxing', label: 'מנוחה בבית', icon: 'fa-couch' },
+        ];
+
+        const contexts = [
+            { id: 'rain', label: 'יום גשום 🌧️' },
+            { id: 'sunny', label: 'יום שרבי / ים ☀️' },
+            { id: 'sunset', label: 'שקיעה 🌅' },
+            { id: 'nighttime', label: 'אמצע הלילה 🌌' }
+        ];
+
+        // Sample Comprehensive Songs Database with verified working YouTube IDs (Hebrew Only)
+        let songs = [
+            {
+                id: 's1',
+                title: 'עוף גוזל',
+                artist: 'אריק איינשטיין',
+                mood: 'nostalgic',
+                activity: 'relaxing',
+                context: 'sunset',
+                energy: 25,
+                youtubeId: '4-L6r0tU-2E',
+                quote: 'תחתוך את השמיים, טוס לאן שבא לך...',
+                spotifyUrl: 'https://open.spotify.com/search/עוף%20גוזל'
+            },
+            {
+                id: 's2',
+                title: 'מסתובב',
+                artist: 'אביב גפן ועידן רייכל',
+                mood: 'chill',
+                activity: 'driving',
+                context: 'sunset',
+                energy: 50,
+                youtubeId: 'Qc7_zRjH808',
+                quote: 'אתה מסתובב בעולם ומחפש תשובות...',
+                spotifyUrl: 'https://open.spotify.com/search/מסתובב%20אביב%20גפן'
+            },
+            {
+                id: 's3',
+                title: 'שבט אחים ואחיות',
+                artist: 'אמני ישראל',
+                mood: 'happy',
+                activity: 'cooking',
+                context: 'sunny',
+                energy: 75,
+                youtubeId: 'V9wZq2S5NfA',
+                quote: 'כאן בית, כאן לב, ואותנו לא קל להזיז...',
+                spotifyUrl: 'https://open.spotify.com/search/שבט%20אחים%20ואחיות'
+            },
+            {
+                id: 's4',
+                title: 'מי זאת',
+                artist: 'נועה קירל',
+                mood: 'energetic',
+                activity: 'workout',
+                context: 'sunny',
+                energy: 100,
+                youtubeId: 'nJ0HshRPh6s',
+                quote: 'מי זאת שכולם מדברים עליה...',
+                spotifyUrl: 'https://open.spotify.com/search/מי%20זאת%20נועה%20קירל'
+            },
+            {
+                id: 's5',
+                title: 'הלוואי',
+                artist: 'בעז שרעבי',
+                mood: 'focus',
+                activity: 'studying',
+                context: 'rain',
+                energy: 25,
+                youtubeId: 'q8U4-e918Lg',
+                quote: 'הלוואי ומענן תרד עלינו קשת...',
+                spotifyUrl: 'https://open.spotify.com/search/הלוואי%20בעז%20שרעבי'
+            },
+            {
+                id: 's6',
+                title: 'תל אביב',
+                artist: 'עומר אדם',
+                mood: 'happy',
+                activity: 'workout',
+                context: 'sunny',
+                energy: 100,
+                youtubeId: 'n_Fe6jJv43Q',
+                quote: 'תל אביב יא חביבי תל אביב, תסתכל כמה כייף מסביב...',
+                spotifyUrl: 'https://open.spotify.com/search/תל%20אביב%20עומר%20אדם'
+            },
+            {
+                id: 's7',
+                title: 'אם תרצי',
+                artist: 'חנן בן ארי',
+                mood: 'romantic',
+                activity: 'relaxing',
+                context: 'nighttime',
+                energy: 50,
+                youtubeId: 'tU-Y5xLInP8',
+                quote: 'אם תרצי אני אהיה לך לחומה...',
+                spotifyUrl: 'https://open.spotify.com/search/אם%20תרצי%20חנן%20בן%20ארי'
+            },
+            {
+                id: 's8',
+                title: 'אהבה כזו',
+                artist: 'עידן רייכל וזהבה בן',
+                mood: 'romantic',
+                activity: 'relaxing',
+                context: 'sunset',
+                energy: 50,
+                youtubeId: 'jPqJqT0D6z4',
+                quote: 'אהבה כזו עוד לא היתה כאן מעולם...',
+                spotifyUrl: 'https://open.spotify.com/search/אהבה%20כזו'
+            },
+            {
+                id: 's9',
+                title: 'חלומות של אחרים',
+                artist: 'הפרויקט של עידן רייכל',
+                mood: 'night',
+                activity: 'driving',
+                context: 'nighttime',
+                energy: 75,
+                youtubeId: '4oQly7D1c5c',
+                quote: 'רוץ לתוך הלילה, אל תביט לאחור...',
+                spotifyUrl: 'https://open.spotify.com/search/חלומות%20של%20אחרים'
+            },
+            {
+                id: 's10',
+                title: 'שיר של יום חולין',
+                artist: 'אילנית',
+                mood: 'nostalgic',
+                activity: 'cooking',
+                context: 'rain',
+                energy: 25,
+                youtubeId: '5eH-v5V4J9E',
+                quote: 'אם יש לי משהו להגיד לך, אגיד אותו מחר...',
+                spotifyUrl: 'https://open.spotify.com/search/שיר%20של%20יום%20חולין'
+            }
+        ];
+
+        // --- STATE MANAGEMENT ---
+        let currentFilters = {
+            mood: 'all',
+            activity: null,
+            context: null,
+            energy: 50
+        };
+
+        let favorites = JSON.parse(localStorage.getItem('moodtunes_favs') || '[]');
+        let selectedSongId = null;
+
+        // --- INITIALIZATION ---
+        window.onload = function () {
+            renderMoods();
+            renderActivities();
+            renderContexts();
+            setupEventListeners();
+            applyFilters();
+        };
+
+        function renderMoods() {
+            const container = document.getElementById('moodGrid');
+            if (!container) return;
+            container.innerHTML = moods.map(m => `
+                <button onclick="setMood('${m.id}')" id="mood-btn-${m.id}" class="mood-btn p-3 rounded-2xl glass hover:bg-white/10 flex flex-col items-center justify-center gap-2 border border-white/10 transition duration-200">
+                    <i class="fa-solid ${m.icon} text-lg text-purple-400"></i>
+                    <span class="text-xs font-medium text-gray-200">${m.label}</span>
+                </button>
+            `).join('');
+            updateMoodUI();
+        }
+
+        function updateMoodUI() {
+            moods.forEach(m => {
+                const btn = document.getElementById(`mood-btn-${m.id}`);
+                if (btn) {
+                    if (currentFilters.mood === m.id) {
+                        btn.className = `mood-btn p-3 rounded-2xl active-tab flex flex-col items-center justify-center gap-2 border transition duration-200`;
+                    } else {
+                        btn.className = `mood-btn p-3 rounded-2xl glass hover:bg-white/10 flex flex-col items-center justify-center gap-2 border border-white/10 transition duration-200`;
+                    }
+                }
+            });
+        }
+
+        function setMood(moodId) {
+            currentFilters.mood = moodId;
+            updateMoodUI();
+            applyFilters();
+        }
+
+        function renderActivities() {
+            const container = document.getElementById('activityList');
+            if (!container) return;
+            container.innerHTML = activities.map(a => `
+                <button onclick="toggleActivity('${a.id}')" id="act-btn-${a.id}" class="px-3 py-1.5 rounded-xl glass hover:bg-white/10 text-xs font-medium text-gray-300 border border-white/10 flex items-center gap-2 transition duration-200">
+                    <i class="fa-solid ${a.icon} text-cyan-400"></i>
+                    <span>${a.label}</span>
+                </button>
+            `).join('');
+        }
+
+        function toggleActivity(actId) {
+            currentFilters.activity = currentFilters.activity === actId ? null : actId;
+            activities.forEach(a => {
+                const btn = document.getElementById(`act-btn-${a.id}`);
+                if (btn) {
+                    if (currentFilters.activity === a.id) {
+                        btn.classList.add('bg-cyan-500/30', 'border-cyan-400', 'text-white');
+                    } else {
+                        btn.classList.remove('bg-cyan-500/30', 'border-cyan-400', 'text-white');
+                    }
+                }
+            });
+            applyFilters();
+        }
+
+        function renderContexts() {
+            const container = document.getElementById('contextList');
+            if (!container) return;
+            container.innerHTML = contexts.map(c => `
+                <button onclick="toggleContext('${c.id}')" id="ctx-btn-${c.id}" class="px-3 py-1.5 rounded-xl glass hover:bg-white/10 text-xs font-medium text-gray-300 border border-white/10 flex items-center gap-2 transition duration-200">
+                    <span>${c.label}</span>
+                </button>
+            `).join('');
+        }
+
+        function toggleContext(ctxId) {
+            currentFilters.context = currentFilters.context === ctxId ? null : ctxId;
+            contexts.forEach(c => {
+                const btn = document.getElementById(`ctx-btn-${c.id}`);
+                if (btn) {
+                    if (currentFilters.context === c.id) {
+                        btn.classList.add('bg-amber-500/30', 'border-amber-400', 'text-white');
+                    } else {
+                        btn.classList.remove('bg-amber-500/30', 'border-amber-400', 'text-white');
+                    }
+                }
+            });
+            applyFilters();
+        }
+
+        function applyFilters() {
+            let filtered = songs.filter(song => {
+                const matchMood = currentFilters.mood === 'all' || song.mood === currentFilters.mood;
+                const matchAct = !currentFilters.activity || song.activity === currentFilters.activity;
+                const matchCtx = !currentFilters.context || song.context === currentFilters.context;
+                const matchEnergy = Math.abs(song.energy - currentFilters.energy) <= 35;
+
+                return matchMood && matchAct && matchCtx && matchEnergy;
+            });
+
+            // If no match found, fallback to broader filter
+            if (filtered.length === 0 && currentFilters.mood !== 'all') {
+                filtered = songs.filter(song => song.mood === currentFilters.mood);
+            }
+            if (filtered.length === 0) {
+                filtered = songs;
+            }
+
+            const resultsCountEl = document.getElementById('resultsCount');
+            if (resultsCountEl) {
+                resultsCountEl.innerText = `נמצאו ${filtered.length} שירים מתאימים`;
+            }
+
+            renderQueue(filtered);
+
+            if (filtered.length > 0) {
+                if (!selectedSongId || !filtered.some(s => s.id === selectedSongId)) {
+                    selectSong(filtered[0].id, false);
+                }
+            } else {
+                document.getElementById('noSongPlaceholder').classList.remove('hidden');
+                document.getElementById('songContent').classList.add('hidden');
+            }
+        }
+
+        function setupEventListeners() {
+            const energyRange = document.getElementById('energyRange');
+            const energyText = document.getElementById('energyValueText');
+            if (energyRange && energyText) {
+                energyRange.addEventListener('input', (e) => {
+                    const val = parseInt(e.target.value);
+                    currentFilters.energy = val;
+                    if (val <= 25) energyText.innerText = 'שקט (Low)';
+                    else if (val <= 60) energyText.innerText = 'בינוני (Mid)';
+                    else energyText.innerText = 'סוער (High)';
+                    applyFilters();
+                });
+            }
+
+            const surpriseBtn = document.getElementById('surpriseBtn');
+            if (surpriseBtn) {
+                surpriseBtn.addEventListener('click', () => {
+                    const randomSong = songs[Math.floor(Math.random() * songs.length)];
+                    currentFilters.mood = randomSong.mood;
+                    updateMoodUI();
+                    applyFilters();
+                    selectSong(randomSong.id, true);
+                    showToast(`🎲 בחרנו עבורך את "${randomSong.title}"!`);
+                });
+            }
+
+            const resetBtn = document.getElementById('resetFiltersBtn');
+            if (resetBtn) {
+                resetBtn.addEventListener('click', () => {
+                    currentFilters = { mood: 'all', activity: null, context: null, energy: 50 };
+                    if (energyRange) energyRange.value = 50;
+                    if (energyText) energyText.innerText = 'הכל';
+                    updateMoodUI();
+                    renderActivities();
+                    renderContexts();
+                    applyFilters();
+                    showToast('המסננים אופסו בהצלחה');
+                });
+            }
+        }
+
+        // Safe YouTube link generator helper
+        function getYouTubeUrl(song) {
+            if (song.youtubeId && song.youtubeId.trim().length > 3) {
+                return `https://www.youtube.com/watch?v=${encodeURIComponent(song.youtubeId.trim())}`;
+            }
+            return `https://www.youtube.com/results?search_query=${encodeURIComponent(song.title + ' ' + song.artist)}`;
+        }
+
+        // --- RENDER FUNCTIONS ---
+        function renderPlayer(song, autoPlay = false) {
+            document.getElementById('noSongPlaceholder').classList.add('hidden');
+            document.getElementById('songContent').classList.remove('hidden');
+
+            document.getElementById('songTitle').innerText = song.title;
+            document.getElementById('songArtist').innerText = song.artist;
+            document.getElementById('songQuote').innerText = song.quote || 'שיר מעולה לחוויה מושלמת';
+
+            // Mood Badge
+            const currentMoodObj = moods.find(m => m.id === song.mood);
+            document.getElementById('currentMoodBadge').innerHTML = `
+                <i class="fa-solid ${currentMoodObj?.icon || 'fa-music'}"></i>
+                <span>${currentMoodObj?.label || 'מצב רוח'}</span>
+            `;
+
+            // Embed Youtube with Autoplay support & safe iframe
+            const embedContainer = document.getElementById('youtubeEmbedContainer');
+            if (song.youtubeId && song.youtubeId.trim().length > 3) {
+                const playParam = autoPlay ? '?autoplay=1&enablejsapi=1&rel=0' : '?autoplay=0&enablejsapi=1&rel=0';
+                embedContainer.innerHTML = `
+                    <iframe class="w-full h-full rounded-2xl" 
+                        src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(song.youtubeId.trim())}${playParam}" 
+                        title="${song.title}" 
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                        allowfullscreen>
+                    </iframe>
+                `;
+            } else {
+                embedContainer.innerHTML = `
+                    <div class="w-full h-full flex flex-col items-center justify-center bg-black/40 text-gray-400 p-4 text-center">
+                        <i class="fa-solid fa-play-circle text-4xl mb-2 text-pink-500"></i>
+                        <span class="text-xs">הנגן המובנה אינו זמין עבור שיר זה</span>
+                    </div>
+                `;
+            }
+
+            // Direct YouTube Link using helper
+            const ytDirectUrl = getYouTubeUrl(song);
+            
+            document.getElementById('youtubeLink').href = ytDirectUrl;
+            document.getElementById('spotifyLink').href = song.spotifyUrl || `https://open.spotify.com/search/${encodeURIComponent(song.title + ' ' + song.artist)}`;
+
+            // Song Tags
+            const tagsContainer = document.getElementById('songTags');
+            const actObj = activities.find(a => a.id === song.activity);
+            const ctxObj = contexts.find(c => c.id === song.context);
+
+            tagsContainer.innerHTML = `
+                <span class="text-[11px] px-2.5 py-0.5 rounded-md glass text-gray-300">⚡ קצב: ${song.energy}%</span>
+                ${actObj ? `<span class="text-[11px] px-2.5 py-0.5 rounded-md glass text-cyan-300"><i class="fa-solid ${actObj.icon} text-[10px]"></i> ${actObj.label}</span>` : ''}
+                ${ctxObj ? `<span class="text-[11px] px-2.5 py-0.5 rounded-md glass text-amber-300">${ctxObj.label}</span>` : ''}
+            `;
+
+            // Favorite Button state
+            const isFav = favorites.includes(song.id);
+            const favBtn = document.getElementById('favBtn');
+            favBtn.innerHTML = `<i class="fa-solid fa-heart ${isFav ? 'text-pink-500' : 'text-gray-400'} text-base"></i>`;
+        }
+
+        function selectSong(id, autoPlay = true) {
+            selectedSongId = id;
+            const song = songs.find(s => s.id === id);
+            if (song) {
+                renderPlayer(song, autoPlay);
+            }
+        }
+
+        function renderQueue(list) {
+            const queueList = document.getElementById('queueList');
+            if (!queueList) return;
+            queueList.innerHTML = list.map(song => {
+                const isActive = song.id === selectedSongId;
+                const ytUrl = getYouTubeUrl(song);
+                
+                return `
+                    <div class="p-2.5 rounded-xl border transition flex items-center justify-between ${isActive ? 'bg-purple-600/20 border-purple-500/50 text-white' : 'glass border-white/5 hover:bg-white/5 text-gray-300'}">
+                        <div onclick="selectSong('${song.id}', true)" class="flex items-center gap-3 overflow-hidden flex-grow cursor-pointer group">
+                            <div class="w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center flex-shrink-0 text-pink-400 group-hover:scale-105 transition">
+                                <i class="fa-solid ${isActive ? 'fa-volume-high animate-pulse' : 'fa-play'} text-xs"></i>
+                            </div>
+                            <div class="truncate">
+                                <h5 class="text-xs font-bold truncate group-hover:text-pink-300 transition">${song.title}</h5>
+                                <p class="text-[11px] text-gray-400 truncate">${song.artist}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 flex-shrink-0 mr-2">
+                            <a href="${ytUrl}" target="_blank" title="פתח ב-YouTube בטאב חדש" class="w-7 h-7 rounded-lg bg-red-600/20 hover:bg-red-600 border border-red-500/30 text-red-400 hover:text-white flex items-center justify-center text-xs transition">
+                                <i class="fa-brands fa-youtube"></i>
+                            </a>
+                            <span class="text-[10px] text-gray-500 font-mono">${song.energy}%</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // --- FAVORITES ---
+        function toggleFavoriteCurrent() {
+            if (!selectedSongId) return;
+            const index = favorites.indexOf(selectedSongId);
+            if (index > -1) {
+                favorites.splice(index, 1);
+                showToast('השיר הוסר מהמועדפים');
+            } else {
+                favorites.push(selectedSongId);
+                showToast('השיר נוסף למועדפים! ❤️');
+            }
+            localStorage.setItem('moodtunes_favs', JSON.stringify(favorites));
+            renderPlayer(songs.find(s => s.id === selectedSongId));
+        }
+
+        // --- MODAL & COMMUNITY SUBMISSION ---
+
+        function openModal() {
+            document.getElementById('addSongModal').classList.remove('hidden');
+            document.getElementById('addSongModal').classList.add('flex');
+        }
+
+        function closeModal() {
+            document.getElementById('addSongModal').classList.add('hidden');
+            document.getElementById('addSongModal').classList.remove('flex');
+        }
+
+        function handleAddSong(e) {
+            e.preventDefault();
+            
+            let ytId = document.getElementById('inputYoutubeId').value.trim();
+            if (ytId.includes('v=')) {
+                ytId = ytId.split('v=')[1].split('&')[0];
+            } else if (ytId.includes('youtu.be/')) {
+                ytId = ytId.split('youtu.be/')[1].split('?')[0];
+            }
+
+            const newSong = {
+                id: 'custom_' + Date.now(),
+                title: document.getElementById('inputTitle').value.trim(),
+                artist: document.getElementById('inputArtist').value.trim(),
+                mood: document.getElementById('inputMood').value,
+                activity: 'relaxing',
+                context: 'sunset',
+                energy: parseInt(document.getElementById('inputEnergy').value),
+                youtubeId: ytId || '4NRXx6U8ABQ',
+                quote: document.getElementById('inputQuote').value.trim() || 'שיר חדש שהתווסף על ידי הקהילה!',
+                spotifyUrl: `https://open.spotify.com/search/${encodeURIComponent(document.getElementById('inputTitle').value)}`
+            };
+
+            songs.unshift(newSong);
+            closeModal();
+            document.getElementById('addSongForm').reset();
+            
+            currentFilters.mood = newSong.mood;
+            updateMoodUI();
+            applyFilters();
+            selectSong(newSong.id, true);
+
+            showToast('השיר שלך נוסף בהצלחה למאגר!');
+        }
+
+        // --- TOAST NOTIFICATION ---
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

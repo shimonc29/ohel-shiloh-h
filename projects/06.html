@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>זמן-מסע | Time-Traveler</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Heebo & Assistant -->
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800&family=Heebo:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Heebo', 'Assistant', 'sans-serif'],
+                    },
+                    colors: {
+                        cyber: {
+                            dark: '#0B0F19',
+                            card: '#161F30',
+                            border: '#2A3B5E',
+                            gold: '#D4AF37',
+                            goldLight: '#F3E5AB',
+                            terminal: '#10B981',
+                            terminalDim: '#064E3B',
+                            accent: '#6366F1'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom styles & animations */
+        body {
+            font-family: 'Heebo', sans-serif;
+            background-color: #0B0F19;
+            color: #F3F4F6;
+            overflow-x: hidden;
+        }
+        
+        .scanlines {
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%, 
+                rgba(0, 0, 0, 0.25) 50%
+            ), linear-gradient(
+                90deg,
+                rgba(255, 0, 0, 0.03),
+                rgba(0, 255, 0, 0.01),
+                rgba(0, 0, 255, 0.03)
+            );
+            background-size: 100% 4px, 6px 100%;
+            pointer-events: none;
+        }
+
+        .glow-gold {
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+        }
+        
+        .glow-terminal {
+            text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(212, 175, 55, 0.2);
+            border-color: #D4AF37;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0B0F19;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2A3B5E;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #D4AF37;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-cyber-dark text-gray-100 flex flex-col relative selection:bg-cyber-gold selection:text-black">
+
+    <!-- Scanlines overlay effect for retro terminal feel -->
+    <div class="absolute inset-0 scanlines z-50 fixed"></div>
+
+    <!-- Header / Navigation Bar -->
+    <header class="border-b border-cyber-border bg-cyber-card/80 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
+            
+            <!-- Logo & Title -->
+            <div class="flex items-center gap-3 cursor-pointer" onclick="app.goHome()">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyber-gold to-yellow-700 flex items-center justify-center shadow-lg shadow-cyber-gold/20 text-black font-black text-xl">
+                    ⏳
+                </div>
+                <div>
+                    <h1 class="text-xl font-black tracking-wider text-cyber-gold flex items-center gap-2">
+                        זמן-מסע <span class="text-xs px-2 py-0.5 bg-cyber-terminalDim text-cyber-terminal rounded border border-cyber-terminal/30 font-mono">v2.0</span>
+                    </h1>
+                    <p class="text-xs text-gray-400 font-light">מסוף היסטוריה וגאוגרפיה רב-תחומי</p>
+                </div>
+            </div>
+
+            <!-- Stats & Player Info -->
+            <div class="flex items-center gap-3 sm:gap-6">
+                <!-- Coins badge -->
+                <div class="flex items-center gap-2 bg-cyber-dark/80 px-3 py-1.5 rounded-full border border-cyber-gold/40 shadow-inner">
+                    <span class="text-yellow-400 text-lg">🪙</span>
+                    <span id="player-coins" class="font-bold text-cyber-gold font-mono text-lg">100</span>
+                    <span class="text-xs text-gray-400 hidden sm:inline">מטבעות</span>
+                </div>
+
+                <!-- Rank title badge -->
+                <div onclick="app.openShop()" class="cursor-pointer flex items-center gap-2 bg-cyber-dark/80 px-3 py-1.5 rounded-full border border-cyber-border hover:border-cyber-gold transition-colors">
+                    <span id="player-badge-icon" class="text-base">🧭</span>
+                    <span id="player-rank" class="text-sm font-semibold text-gray-200">נוסע מתחיל</span>
+                </div>
+
+                <!-- Sound Toggle Button -->
+                <button id="sound-toggle" onclick="soundManager.toggle()" class="w-9 h-9 rounded-full bg-cyber-dark border border-cyber-border flex items-center justify-center text-gray-400 hover:text-cyber-gold hover:border-cyber-gold transition" title="הפעל/כבה צלילים">
+                    🔊
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 z-10 flex flex-col">
+        
+        <!-- ================= VIEW 1: HOME (PERIOD SELECTION) ================= -->
+        <section id="view-home" class="space-y-6">
+            <!-- Hero banner -->
+            <div class="bg-gradient-to-r from-cyber-card via-[#111928] to-cyber-card border border-cyber-border rounded-2xl p-6 sm:p-8 relative overflow-hidden shadow-2xl">
+                <div class="absolute -left-10 -bottom-10 text-9xl opacity-5 select-none font-mono">TIME</div>
+                <div class="relative z-10 max-w-2xl">
+                    <div class="inline-block px-3 py-1 rounded-full bg-cyber-terminalDim text-cyber-terminal text-xs font-mono mb-3 border border-cyber-terminal/30">
+                        ⚡ מערכת ניווט זמנים מוכנה לפעולה
+                    </div>
+                    <h2 class="text-3xl sm:text-4xl font-extrabold text-white mb-3 tracking-tight">
+                        לאיזו תקופה בהיסטוריה נרצה לנסוע היום?
+                    </h2>
+                    <p class="text-gray-300 text-sm sm:text-base leading-relaxed mb-6">
+                        בחרו תקופה היסטורית, קראו את תקציר המסוף, פתחו אתגרים וענו על שאלות טריוויה כדי לצבור מטבעות זהב, לשדרג את התארים שלכם ולפתוח מסעות סודיים נוספים!
+                    </p>
+                    <div class="flex flex-wrap gap-3">
+                        <button onclick="app.scrollToEras()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyber-gold to-yellow-600 text-black font-bold text-sm shadow-lg shadow-cyber-gold/20 hover:opacity-90 transition">
+                            בחר תקופה למסע 🚀
+                        </button>
+                        <button onclick="app.openShop()" class="px-5 py-2.5 rounded-xl bg-cyber-card border border-cyber-border text-cyber-gold font-semibold text-sm hover:border-cyber-gold transition flex items-center gap-2">
+                            <span>🛍️</span> חנות שדרוגים ותארים
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Header & Filter -->
+            <div class="flex justify-between items-center pt-2">
+                <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                    <span>🏛️</span> תקופות היסטוריות זמינות
+                </h3>
+                <span class="text-xs text-gray-400 font-mono" id="eras-count">4 תקופות במערכת</span>
+            </div>
+
+            <!-- Eras Grid -->
+            <div id="eras-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Populated dynamically via JS -->
+            </div>
+        </section>
+
+        <!-- ================= VIEW 2: ERA MISSION (INFO & QUIZ) ================= -->
+        <section id="view-mission" class="hidden space-y-6">
+            <!-- Back button & Navigation info -->
+            <div class="flex justify-between items-center">
+                <button onclick="app.goHome()" class="px-4 py-2 rounded-xl bg-cyber-card border border-cyber-border hover:border-cyber-gold text-sm font-semibold flex items-center gap-2 transition">
+                    <span>⬅️</span> חזרה למפת הזמנים
+                </button>
+                <div id="mission-era-badge" class="px-3 py-1 rounded-full bg-cyber-gold/10 border border-cyber-gold/30 text-cyber-gold text-xs font-mono font-bold">
+                    מצרים העתיקה | 1300 לפנה"ס
+                </div>
+            </div>
+
+            <!-- Era Header Banner -->
+            <div id="mission-header-card" class="bg-cyber-card border border-cyber-border rounded-2xl p-6 relative overflow-hidden">
+                <div class="flex flex-col md:flex-row gap-6 items-center">
+                    <div id="mission-icon" class="text-6xl sm:text-7xl p-4 bg-cyber-dark rounded-2xl border border-cyber-border shadow-inner flex items-center justify-center shrink-0">
+                        🏺
+                    </div>
+                    <div class="space-y-2 flex-1 text-right">
+                        <h2 id="mission-title" class="text-2xl sm:text-3xl font-black text-cyber-gold">כותרת התקופה</h2>
+                        <p id="mission-subtitle" class="text-sm text-cyber-terminal font-mono">תאריך ומיקום גאוגרפי</p>
+                        <p id="mission-desc" class="text-gray-300 text-sm sm:text-base leading-relaxed pt-2">תיאור מפורט...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quiz Section Container -->
+            <div class="bg-cyber-card border border-cyber-border rounded-2xl p-6 sm:p-8 space-y-6 shadow-xl">
+                <div class="flex justify-between items-center border-b border-cyber-border pb-4">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">🎯</span>
+                        <div>
+                            <h3 class="text-lg font-bold text-white">אתגר טריוויה היסטורי</h3>
+                            <p class="text-xs text-gray-400">ענה נכון על השאלות כדי להרוויח מטבעות זהב ונסיון</p>
+                        </div>
+                    </div>
+                    <div id="quiz-progress-text" class="px-3 py-1 bg-cyber-dark rounded-lg border border-cyber-border text-xs font-mono text-cyber-gold">
+                        שאלה 1 מתוך 3
+                    </div>
+                </div>
+
+                <!-- Question Box -->
+                <div id="quiz-container" class="space-y-6">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ================= SHOP / PROFILE MODAL ================= -->
+    <div id="shop-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-cyber-card border border-cyber-border rounded-2xl max-w-lg w-full p-6 space-y-6 shadow-2xl relative">
+            <div class="flex justify-between items-center border-b border-cyber-border pb-4">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">🛍️</span>
+                    <h3 class="text-xl font-bold text-cyber-gold">חנות שדרוגים ותארים</h3>
+                </div>
+                <button onclick="app.closeShop()" class="text-gray-400 hover:text-white font-bold text-lg p-1">✕</button>
+            </div>
+
+            <p class="text-xs text-gray-300 leading-relaxed">
+                צברו מטבעות זהב במשחקי הטריוויה השונים והשתמשו בהם כדי לשדרג את התואר שלכם במסוף או לפתוח נעילות מיוחדות!
+            </p>
+
+            <!-- Titles Upgrade List -->
+            <div class="space-y-3 max-h-80 overflow-y-auto pr-1" id="shop-items-container">
+                <!-- Populated dynamically via JS -->
+            </div>
+
+            <div class="pt-2 border-t border-cyber-border flex justify-end">
+                <button onclick="app.closeShop()" class="px-4 py-2 rounded-xl bg-cyber-dark border border-cyber-border text-sm hover:border-cyber-gold transition">
+                    סגור חנות
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= NOTIFICATION TOAST ================= -->
+    <div id="toast" class="fixed bottom-6 left-6 z-50 transform translate-y-32 opacity-0 transition-all duration-300 bg-cyber-card border border-cyber-gold/50 px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3">
+        <span id="toast-icon" class="text-2xl">✨</span>
+        <div>
+            <h4 id="toast-title" class="font-bold text-sm text-cyber-gold">הודעת מערכת</h4>
+            <p id="toast-desc" class="text-xs text-gray-300">תיאור קצר...</p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-cyber-border bg-cyber-card/50 py-4 text-center text-xs text-gray-400 mt-auto z-10">
+        <p>זמן-מסע (Time-Traveler) © 2026 | פותח עבור חוקרי היסטוריה וגאוגרפיה צעירים ומבוגרים כאחד.</p>
+    </footer>
+
+    <!-- ================= JAVASCRIPT LOGIC ================= -->
+    <script>
+        // --- SOUND MANAGER (Web Audio API) ---
+        class SoundManager {
+            constructor() {
+                this.enabled = true;
+                this.audioCtx = null;
+            }
+
+            init() {
+                if (!this.audioCtx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) {
+                        this.audioCtx = new AudioContext();
+                    }
+                }
+            }
+
+            toggle() {
+                this.enabled = !this.enabled;
+                const btn = document.getElementById('sound-toggle');
+                btn.textContent = this.enabled ? '🔊' : '🔇';
+                app.showToast(this.enabled ? 'אפקטים קוליים הופעלו' : 'אפקטים קוליים הושתקו', 'ניהול שמע', '🎵');
+            }
+
+            playClick() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.audioCtx) return;
+
+                const osc = this.audioCtx.createOscillator();
+                const gain = this.audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, this.audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, this.audioCtx.currentTime + 0.08);
+
+                gain.gain.setValueAtTime(0.1, this.audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.08);
+
+                osc.connect(gain);
+                gain.connect(this.audioCtx.destination);
+
+                osc.start();
+                osc.stop(this.audioCtx.currentTime + 0.08);
+            }
+
+            playSuccess() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.audioCtx) return;
+
+                const now = this.audioCtx.currentTime;
+                const osc = this.audioCtx.createOscillator();
+                const gain = this.audioCtx.createGain();
+
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
+
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+                osc.connect(gain);
+                gain.connect(this.audioCtx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.4);
+            }
+
+            playError() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.audioCtx) return;
+
+                const now = this.audioCtx.currentTime;
+                const osc = this.audioCtx.createOscillator();
+                const gain = this.audioCtx.createGain();
+
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.linearRampToValueAtTime(120, now + 0.2);
+
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+
+                osc.connect(gain);
+                gain.connect(this.audioCtx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.2);
+            }
+        }
+
+        const soundManager = new SoundManager();
+
+        // --- DATABASE OF ERAS & QUIzzes ---
+        const ERAS_DATA = [
+            {
+                id: 'egypt',
+                title: 'מצרים העתיקה',
+                date: 'סביב 1300 לפנה"ס',
+                location: 'עמק הנילוס, מצרים',
+                icon: '🏺',
+                cost: 0,
+                unlocked: true,
+                desc: 'תקופת הפרעונים הגדולים, בניית הפירמידות העצומות, התרבות סביב נהר הנילוס המסתורי וכתב החרטומים המרתק. גלו את סודות האלים והמומיות המלכותיות.',
+                questions: [
+                    {
+                        q: 'איזה נהר מרכזי היה מקור החיים והתרבות במצרים העתיקה?',
+                        options: ['נהר הנילוס', 'נהר הפרת', 'נהר הירדן', 'נהר האמזונاس'],
+                        answer: 0
+                    },
+                    {
+                        q: 'כיצד נקרא כתב הסמלים העתיק שבו השתמשו המצרים הקדמונים?',
+                        options: ['כתב היתדות', 'כתב חרטומים', 'אלפבית לטיני', 'כתב רש"י'],
+                        answer: 1
+                    },
+                    {
+                        q: 'לאילו מבנים עצומים שימשו המצרים את הידע ההנדסי שלהם כמקום קבורה למלכים?',
+                        options: ['טירות ענק', 'פירמידות', 'מגדלי שמירה', 'מקדשי מים'],
+                        answer: 1
+                    }
+                ]
+            },
+            {
+                id: 'rome',
+                title: 'רומא העתיקה',
+                date: 'שנת 80 לספירה',
+                location: 'איטליה ואגן הים התיכון',
+                icon: '🏛️',
+                cost: 0,
+                unlocked: true,
+                desc: 'האימפריה הגדולה ששלטה על חצי עולם, קרבות הגלדיאטורים בקולוסיאום העצום, דרכי אבן מופתיות ומערכות אמת מים מתוחכמות ששינו את ההיסטוריה.',
+                questions: [
+                    {
+                        q: 'כיצד נקרא האמפיתיאטרון הענק ברומא שבו התקיימו קרבות גלדיאטורים?',
+                        options: ['הפרתנון', 'הקולוסיאום', 'הפורום הרומאי', 'הפנתאון'],
+                        answer: 1
+                    },
+                    {
+                        q: 'איזו ממצא הנדסי מדהים אפשר לרומאים להוביל מים מרחקים עצומים אל תוך הערים?',
+                        options: ['צינורות נחושת', 'אמת מים (Aqueduct)', 'תעלות תת-קרקעיות', 'משאבות רוח'],
+                        answer: 1
+                    },
+                    {
+                        q: 'באיזה יבשת התחילה והתפשטה האימפריה הרומית במקור?',
+                        options: ['אסיה', 'אפריקה', 'אירופה', 'אמריקה'],
+                        answer: 2
+                    }
+                ]
+            },
+            {
+                id: 'jerusalem',
+                title: 'ירושלים בימי בית שני',
+                date: 'שנת 20 לפנה"ס',
+                location: 'ארץ ישראל, ירושלים',
+                icon: '🕍',
+                cost: 50,
+                unlocked: false,
+                desc: 'תקופת שיפוץ בית המקדש השני בידי המלך הורדוס. ירושלים העתיקה שוקקת עולי רגל מכל רחבי העולם העתיק, רחובות אבן מפוארים ושוק סואן סביב חומות העיר.',
+                questions: [
+                    {
+                        q: 'איזה מלך מפורסם הרחיב ופאר באופן דרמטי את הר הבית ואת בית המקדש השני?',
+                        options: ['שלמה המלך', 'המלך הורדוס', 'דוד המלך', 'אנטיוכס'],
+                        answer: 1
+                    },
+                    {
+                        q: 'מה היה שמם של עולי הרגל הרבים שהגיעו לירושלים בחגים?',
+                        options: ['תיירים רומאים', 'עולי רגל (פילים)', 'סוחרים פיניקים', 'שליחי מלכות'],
+                        answer: 1
+                    },
+                    {
+                        q: 'איזה אלמנט ארכיטקטוני ענק ומפואר בנה הורדוס כתשתית להרחבת הר הבית?',
+                        options: ['גשרי חבלים', 'קירות תמיכה עצומים (הכותל המערבי)', 'מגדלי פלדה', 'מנהרות מים'],
+                        answer: 1
+                    }
+                ]
+            },
+            {
+                id: 'tlv1910',
+                title: 'תל אביב הקטנה',
+                date: 'שנת 1910',
+                location: 'חוף הים התיכון, ארץ ישראל',
+                icon: '🌴',
+                cost: 100,
+                unlocked: false,
+                desc: 'הקמת אחוזת בית, השכונה העברית הראשונה מחוץ לחומות יפו. הקמת העיר העברית הראשונה בעת החדשה על חולות נודדים עם צריפים קטנים והרבה חזון ציוני.',
+                questions: [
+                    {
+                        q: 'מה היה שמה המקורי של השכונה הראשונה שהפכה לתל אביב בשנת 1910?',
+                        options: ['נווה צדק', 'אחוזת בית', 'שרונה', 'פלורנטין'],
+                        answer: 1
+                    },
+                    {
+                        q: 'על איזו תשתית טבעית נבנו הבתים הראשונים של תל אביב הקטנה?',
+                        options: ['סלעי גרניט קשים', 'חולות נודדים', 'ביצות ירקון', 'אדמת חמרה חקלאית'],
+                        answer: 1
+                    },
+                    {
+                        q: 'כיצד הוגרלו המגרשים הראשונים בין 66 המשפחות המייסדות?',
+                        options: ['בעזרת צדפים על חוף הים', 'בהגרלת צדפים שחורים ולבנים על ידי עקיבא אריה ויס', 'לפי ותק בארץ', 'על פי מטבעות זהב'],
+                        answer: 1
+                    }
+                ]
+            }
+        ];
+
+        // --- SHOP RANKS & TITLES ---
+        const RANKS_DATA = [
+            { id: 'novice', title: 'נוסע מתחיל', icon: '🧭', cost: 0, requiredScore: 0 },
+            { id: 'historian', title: 'היסטוריון מלומד', icon: '📜', cost: 120, requiredScore: 120 },
+            { id: 'geographer', title: 'גאוגרפף מומחה', icon: '🗺️', cost: 250, requiredScore: 250 },
+            { id: 'master', title: 'אדון הזמן האגדי', icon: '⏳', cost: 400, requiredScore: 400 }
+        ];
+
+        // --- APPLICATION STATE ---
+        class TimeTravelerApp {
+            constructor() {
+                this.state = {
+                    coins: 100,
+                    rank: 'נוסע מתחיל',
+                    rankIcon: '🧭',
+                    unlockedEras: ['egypt', 'rome'],
+                    currentEraId: null,
+                    currentQuestionIndex: 0,
+                    scoreInQuiz: 0
+                };
+                this.loadState();
+            }
+
+            saveState() {
+                localStorage.setItem('timetraveler_state', JSON.stringify({
+                    coins: this.state.coins,
+                    rank: this.state.rank,
+                    rankIcon: this.state.rankIcon,
+                    unlockedEras: this.state.unlockedEras
+                }));
+            }
+
+            loadState() {
+                const saved = localStorage.getItem('timetraveler_state');
+                if (saved) {
+                    try {
+                        const parsed = JSON.parse(saved);
+                        this.state.coins = parsed.coins ?? 100;
+                        this.state.rank = parsed.rank ?? 'נוסע מתחיל';
+                        this.state.rankIcon = parsed.rankIcon ?? '🧭';
+                        this.state.unlockedEras = parsed.unlockedEras ?? ['egypt', 'rome'];
+                    } catch (e) {
+                        console.error('Error loading saved state', e);
+                    }
+                }
+            }
+
+            init() {
+                this.updateHeaderStats();
+                this.renderErasGrid();
+            }
+
+            updateHeaderStats() {
+                document.getElementById('player-coins').textContent = this.state.coins;
+                document.getElementById('player-rank').textContent = this.state.rank;
+                document.getElementById('player-badge-icon').textContent = this.state.rankIcon;
+            }
+
+            showToast(title, desc = '', icon = '✨') {
+                const toast = document.getElementById('toast');
+                document.getElementById('toast-title').textContent = title;
+                document.getElementById('toast-desc').textContent = desc;
+                document.getElementById('toast-icon').textContent = icon;
+
+                toast.classList.remove('translate-y-32', 'opacity-0');
+                setTimeout(() => {
+                    toast.classList.add('translate-y-32', 'opacity-0');
+                }, 3500);
+            }
+
+            scrollToEras() {
+                soundManager.playClick();
+                document.getElementById('eras-grid').scrollIntoView({ behavior: 'smooth' });
+            }
+
+            renderErasGrid() {
+                const grid = document.getElementById('eras-grid');
+                grid.innerHTML = '';
+
+                ERAS_DATA.forEach(era => {
+                    const isUnlocked = this.state.unlockedEras.includes(era.id) || era.cost === 0;
+                    
+                    const card = document.createElement('div');
+                    card.className = `card-hover bg-cyber-card border ${isUnlocked ? 'border-cyber-border' : 'border-cyber-border/50 opacity-90'} rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden`;
+
+                    let actionHtml = '';
+                    if (isUnlocked) {
+                        actionHtml = `
+                            <button onclick="app.startEraMission('${era.id}')" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyber-gold to-yellow-600 text-black font-bold text-sm shadow-md hover:opacity-90 transition flex items-center justify-center gap-2">
+                                <span>🚀</span> מסע לתקופה
+                            </button>
+                        `;
+                    } else {
+                        actionHtml = `
+                            <button onclick="app.unlockEra('${era.id}', ${era.cost})" class="w-full py-2.5 rounded-xl bg-cyber-dark border border-cyber-gold/40 text-cyber-gold font-bold text-sm hover:bg-cyber-gold hover:text-black transition flex items-center justify-center gap-2">
+                                <span>🔓</span> פתח תמורת 🪙 ${era.cost} מטבעות
+                            </button>
+                        `;
+                    }
+
+                    card.innerHTML = `
+                        <div>
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="w-14 h-14 rounded-2xl bg-cyber-dark border border-cyber-border flex items-center justify-center text-3xl shadow-inner">
+                                    ${era.icon}
+                                </div>
+                                <span class="text-xs px-2.5 py-1 rounded-full bg-cyber-dark border border-cyber-border text-cyber-gold font-mono">
+                                    ${era.date}
+                                </span>
+                            </div>
+                            <h4 class="text-lg font-bold text-white mb-1">${era.title}</h4>
+                            <p class="text-xs text-cyber-terminal font-mono mb-3">📍 ${era.location}</p>
+                            <p class="text-xs text-gray-300 leading-relaxed line-clamp-3 mb-6">${era.desc}</p>
+                        </div>
+                        <div>
+                            ${actionHtml}
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            }
+
+            unlockEra(eraId, cost) {
+                soundManager.playClick();
+                if (this.state.coins >= cost) {
+                    this.state.coins -= cost;
+                    this.state.unlockedEras.push(eraId);
+                    this.saveState();
+                    this.updateHeaderStats();
+                    this.renderErasGrid();
+                    soundManager.playSuccess();
+                    this.showToast('התקופה נפתחה בהצלחה!', 'מסע חדש זמין כעת במערכת הניווט', '🔓');
+                } else {
+                    soundManager.playError();
+                    this.showToast('אין מספיק מטבעות זהב', `נדרשים ${cost} מטבעות לפתיחת תקופה זו`, '⚠️');
+                }
+            }
+
+            startEraMission(eraId) {
+                soundManager.playClick();
+                const era = ERAS_DATA.find(e => e.id === eraId);
+                if (!era) return;
+
+                this.state.currentEraId = eraId;
+                this.state.currentQuestionIndex = 0;
+                this.state.scoreInQuiz = 0;
+
+                // Switch views
+                document.getElementById('view-home').classList.add('hidden');
+                document.getElementById('view-mission').classList.remove('hidden');
+
+                // Populate era mission header info
+                document.getElementById('mission-era-badge').textContent = `${era.title} | ${era.date}`;
+                document.getElementById('mission-icon').textContent = era.icon;
+                document.getElementById('mission-title').textContent = era.title;
+                document.getElementById('mission-subtitle').textContent = `📅 ${era.date} | 📍 ${era.location}`;
+                document.getElementById('mission-desc').textContent = era.desc;
+
+                this.renderQuizQuestion();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            goHome() {
+                soundManager.playClick();
+                document.getElementById('view-mission').classList.add('hidden');
+                document.getElementById('view-home').classList.remove('hidden');
+                this.renderErasGrid();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            renderQuizQuestion() {
+                const era = ERAS_DATA.find(e => e.id === this.state.currentEraId);
+                if (!era) return;
+
+                const qIndex = this.state.currentQuestionIndex;
+                const totalQ = era.questions.length;
+
+                document.getElementById('quiz-progress-text').textContent = `שאלה ${qIndex + 1} מתוך ${totalQ}`;
+
+                const container = document.getElementById('quiz-container');
+                
+                if (qIndex >= totalQ) {
+                    // Quiz Completed!
+                    soundManager.playSuccess();
+                    const earnedCoins = this.state.scoreInQuiz * 15;
+                    this.state.coins += earnedCoins;
+                    this.saveState();
+                    this.updateHeaderStats();
+
+                    container.innerHTML = `
+                        <div class="text-center py-8 space-y-4">
+                            <div class="text-6xl animate-bounce">🏆</div>
+                            <h4 class="text-2xl font-black text-cyber-gold">האתגר הושלם בהצלחה!</h4>
+                            <p class="text-sm text-gray-300 max-w-md mx-auto leading-relaxed">
+                                ענית נכון על <span class="text-cyber-terminal font-bold">${this.state.scoreInQuiz}</span> מתוך <span class="font-bold">${totalQ}</span> השאלות בתקופה זו.
+                            </p>
+                            <div class="inline-flex items-center gap-2 bg-cyber-dark px-4 py-2 rounded-xl border border-cyber-gold/40 text-cyber-gold font-mono font-bold text-base">
+                                <span>🪙</span> הרווחת ${earnedCoins} מטבעות זהב!
+                            </div>
+                            <div class="pt-4 flex justify-center gap-3">
+                                <button onclick="app.startEraMission('${era.id}')" class="px-5 py-2.5 rounded-xl bg-cyber-card border border-cyber-border text-sm font-semibold hover:border-cyber-gold transition">
+                                    שחק שוב
+                                </button>
+                                <button onclick="app.goHome()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyber-gold to-yellow-600 text-black font-bold text-sm shadow-md hover:opacity-90 transition">
+                                    חזרה למפת הזמנים
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const currentQ = era.questions[qIndex];
+                let optionsHtml = '';
+                currentQ.options.forEach((opt, idx) => {
+                    optionsHtml += `
+                        <button onclick="app.handleAnswer(${idx}, ${currentQ.answer})" class="w-full text-right p-4 rounded-xl bg-cyber-dark border border-cyber-border hover:border-cyber-gold hover:bg-cyber-card transition flex items-center justify-between group">
+                            <span class="text-sm sm:text-base text-gray-200 group-hover:text-cyber-gold transition">${opt}</span>
+                            <span class="w-7 h-7 rounded-lg bg-cyber-card border border-cyber-border flex items-center justify-center text-xs font-mono text-gray-400 group-hover:border-cyber-gold group-hover:text-cyber-gold">${String.fromCharCode(1488 + idx)}</span>
+                        </button>
+                    `;
+                });
+
+                container.innerHTML = `
+                    <div class="space-y-4">
+                        <h4 class="text-lg sm:text-xl font-bold text-white leading-relaxed">
+                            ${currentQ.q}
+                        </h4>
+                        <div class="grid grid-cols-1 gap-3 pt-2">
+                            ${optionsHtml}
+                        </div>
+                    </div>
+                `;
+            }
+
+            handleAnswer(selectedIndex, correctIndex) {
+                const era = ERAS_DATA.find(e => e.id === this.state.currentEraId);
+                const buttons = document.querySelectorAll('#quiz-container button');
+
+                // Disable all buttons to prevent double clicks
+                buttons.forEach(btn => btn.disabled = true);
+
+                if (selectedIndex === correctIndex) {
+                    soundManager.playSuccess();
+                    this.state.scoreInQuiz++;
+                    buttons[selectedIndex].classList.remove('bg-cyber-dark', 'border-cyber-border');
+                    buttons[selectedIndex].classList.add('bg-cyber-terminalDim', 'border-cyber-terminal', 'text-cyber-terminal');
+                    this.showToast('תשובה נכונה! כל הכבוד', '+1 נקודה באתגר', '🎯');
+                } else {
+                    soundManager.playError();
+                    buttons[selectedIndex].classList.remove('bg-cyber-dark', 'border-cyber-border');
+                    buttons[selectedIndex].classList.add('bg-red-950/50', 'border-red-500/50', 'text-red-300');
+                    buttons[correctIndex].classList.remove('bg-cyber-dark', 'border-cyber-border');
+                    buttons[correctIndex].classList.add('bg-cyber-terminalDim', 'border-cyber-terminal', 'text-cyber-terminal');
+                    this.showToast('תשובה שגויה', 'לא נורא, נמשיך לשאלה הבאה', '❌');
+                }
+
+                setTimeout(() => {
+                    this.state.currentQuestionIndex++;
+                    this.renderQuizQuestion();
+                }, 1400);
+            }
+
+            openShop() {
+                soundManager.playClick();
+                const container = document.getElementById('shop-items-container');
+                container.innerHTML = '';
+
+                RANKS_DATA.forEach(rankObj => {
+                    const isCurrent = this.state.rank === rankObj.title;
+                    const canAfford = this.state.coins >= rankObj.cost;
+                    
+                    let actionBtn = '';
+                    if (isCurrent) {
+                        actionBtn = `<span class="text-xs px-3 py-1.5 rounded-lg bg-cyber-terminalDim text-cyber-terminal font-mono border border-cyber-terminal/30 font-bold">התואר הנוכחי</span>`;
+                    } else if (this.state.coins >= rankObj.cost) {
+                        actionBtn = `<button onclick="app.buyRank('${rankObj.title}', '${rankObj.icon}', ${rankObj.cost})" class="px-4 py-1.5 rounded-lg bg-gradient-to-r from-cyber-gold to-yellow-600 text-black font-bold text-xs hover:opacity-90 transition">שדרג תואר</button>`;
+                    } else {
+                        actionBtn = `<span class="text-xs text-gray-500 font-mono">נדרשים ${rankObj.cost} 🪙</span>`;
+                    }
+
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = `p-4 rounded-xl bg-cyber-dark border ${isCurrent ? 'border-cyber-gold' : 'border-cyber-border'} flex items-center justify-between gap-4`;
+                    itemDiv.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl p-2 bg-cyber-card rounded-xl border border-cyber-border">${rankObj.icon}</span>
+                            <div>
+                                <h5 class="font-bold text-sm text-white">${rankObj.title}</h5>
+                                <p class="text-xs text-gray-400 font-mono">עלות: ${rankObj.cost} מטבעות זהב</p>
+                            </div>
+                        </div>
+                        <div>
+                            ${actionBtn}
+                        </div>
+                    `;
+                    container.appendChild(itemDiv);
+                });
+
+                document.getElementById('shop-modal').classList.remove('hidden');
+            }
+
+            closeShop() {
+                soundManager.playClick();
+                document.getElementById('shop-modal').classList.add('hidden');
+            }
+
+            buyRank(title, icon, cost) {
+                soundManager.playClick();
+                if (this.state.coins >= cost) {
+                    this.state.coins -= cost;
+                    this.state.rank = title;
+                    this.state.rankIcon = icon;
+                    this.saveState();
+                    this.updateHeaderStats();
+                    soundManager.playSuccess();
+                    this.showToast(`התואר שודרג בהצלחה ל-${title}!`, 'הפרופיל שלך במסוף עודכן', '👑');
+                    this.openShop(); // Refresh shop modal
+                } else {
+                    soundManager.playError();
+                    this.showToast('אין לך מספיק מטבעות', 'אסוף עוד מטבעות בחידוני התקופות', '⚠️');
+                }
+            }
+        }
+
+        // Initialize application instance
+        const app = new TimeTravelerApp();
+        window.onload = () => {
+            app.init();
+        };
+    </script>
+</body>
+</html>

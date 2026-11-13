@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מערכת היקום והאסטרונומיה | Cosmos 3D & AI</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Heebo', 'sans-serif'] },
+                    colors: {
+                        space: { 900: '#050714', 800: '#0b0f28', 700: '#141b43', neon: '#00f0ff' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #050714; color: #fff; overflow-x: hidden; }
+        .glass { background: rgba(20, 27, 67, 0.55); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .glass-card { background: rgba(11, 15, 40, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(0, 240, 255, 0.2); }
+        .glow-effect { box-shadow: 0 0 25px rgba(0, 240, 255, 0.25); }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #050714; }
+        ::-webkit-scrollbar-thumb { background: #141b43; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #00f0ff; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans">
+
+    <!-- NAVBAR -->
+    <header class="sticky top-0 z-50 glass border-b border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-cyan-500 to-purple-600 flex items-center justify-center text-white shadow-lg">
+                    <i class="fa-solid fa-atom text-xl"></i>
+                </div>
+                <h1 class="text-xl font-black bg-gradient-to-r from-cyan-400 via-purple-300 to-pink-500 bg-clip-text text-transparent">
+                    COSMOS 3D & AI
+                </h1>
+            </div>
+            
+            <nav class="flex items-center gap-1 sm:gap-2">
+                <button onclick="switchTab('solar')" id="nav-solar" class="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold transition bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                    <i class="fa-solid fa-globe ml-1"></i> מערכת השמש
+                </button>
+                <button onclick="switchTab('galaxy')" id="nav-galaxy" class="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold transition text-gray-400 hover:text-white hover:bg-white/5">
+                    <i class="fa-solid fa-bahai ml-1"></i> שביל החלב
+                </button>
+                <button onclick="switchTab('search')" id="nav-search" class="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold transition text-gray-400 hover:text-white hover:bg-white/5">
+                    <i class="fa-solid fa-magnifying-glass ml-1"></i> מאמרים ומחקרים
+                </button>
+                <button onclick="switchTab('ai')" id="nav-ai" class="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold transition text-gray-400 hover:text-white hover:bg-white/5">
+                    <i class="fa-solid fa-robot ml-1"></i> עוזר AI
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 relative max-w-7xl w-full mx-auto p-4 flex flex-col">
+
+        <!-- TAB 1: SOLAR SYSTEM 3D -->
+        <section id="tab-solar" class="w-full flex-1 flex flex-col gap-4">
+            <div class="relative w-full h-[60vh] min-h-[400px] rounded-2xl overflow-hidden border border-cyan-900/40 glow-effect bg-black">
+                <div id="solar-canvas-container" class="w-full h-full cursor-grab active:cursor-grabbing"></div>
+                
+                <!-- Solar Overlay Controls -->
+                <div class="absolute top-4 right-4 glass p-3 rounded-xl text-xs space-y-2 max-w-[220px]">
+                    <p class="text-cyan-400 font-bold"><i class="fa-solid fa-hand-pointer ml-1"></i> ניווט בתלת-ממד</p>
+                    <p class="text-gray-300">גרור לסיבוב, גלול לזום, לחץ על כוכב לכת לפרטים.</p>
+                    <button onclick="toggleOrbits()" class="w-full py-1 px-2 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 rounded border border-cyan-700/50 transition">
+                        הצג/הסתר מסלולים
+                    </button>
+                    <button onclick="resetSolarView()" class="w-full py-1 px-2 bg-purple-950/80 hover:bg-purple-900 text-purple-300 rounded border border-purple-700/50 transition">
+                        איפוס מצלמה
+                    </button>
+                </div>
+
+                <!-- Info Box -->
+                <div id="planet-info-box" class="absolute bottom-4 right-4 left-4 sm:left-auto glass p-4 rounded-xl max-w-md hidden border border-cyan-500/40">
+                    <h3 id="planet-title" class="text-lg font-bold text-cyan-300 mb-1"></h3>
+                    <p id="planet-desc" class="text-xs text-gray-200 mb-2"></p>
+                    <div class="grid grid-cols-2 gap-2 text-[11px] text-gray-300">
+                        <div class="bg-space-900/60 p-2 rounded border border-gray-800">מרחק מהשמש: <span id="planet-dist" class="text-white font-semibold"></span></div>
+                        <div class="bg-space-900/60 p-2 rounded border border-gray-800">זמן הקפה: <span id="planet-orbit" class="text-white font-semibold"></span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Planets Quick Select Toolbar -->
+            <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin">
+                <button onclick="selectPlanet('sun')" class="px-3 py-2 bg-yellow-500/10 border border-yellow-500/30 rounded-xl text-xs whitespace-nowrap hover:bg-yellow-500/20 text-yellow-300">☀️ השמש</button>
+                <button onclick="selectPlanet('mercury')" class="px-3 py-2 glass rounded-xl text-xs whitespace-nowrap hover:border-cyan-500/50">חמה</button>
+                <button onclick="selectPlanet('venus')" class="px-3 py-2 glass rounded-xl text-xs whitespace-nowrap hover:border-cyan-500/50">נוגה</button>
+                <button onclick="selectPlanet('earth')" class="px-3 py-2 glass rounded-xl text-xs whitespace-nowrap hover:border-cyan-500/50">כדור הארץ</button>
+                <button onclick="selectPlanet('mars')" class="px-3 py-2 glass rounded-xl text-xs whitespace-nowrap hover:border-cyan-500/50">מאדים</button>
+                <button onclick="selectPlanet('jupiter')" class="px-3 py-2 glass rounded-xl text-xs whitespace-nowrap hover:border-cyan-500/50">צדק</button>
+                <button onclick="selectPlanet('saturn')" class="px-3 py-2 glass rounded-xl text-xs whitespace-nowrap hover:border-cyan-500/50">שבתאי</button>
+                <button onclick="selectPlanet('uranus')" class="px-3 py-2 glass rounded-xl text-xs whitespace-nowrap hover:border-cyan-500/50">אורנוס</button>
+                <button onclick="selectPlanet('neptune')" class="px-3 py-2 glass rounded-xl text-xs whitespace-nowrap hover:border-cyan-500/50">נפטון</button>
+            </div>
+        </section>
+
+        <!-- TAB 2: GALAXY 3D -->
+        <section id="tab-galaxy" class="w-full flex-1 hidden flex-col">
+            <div class="relative w-full h-[65vh] min-h-[450px] rounded-2xl overflow-hidden border border-purple-900/40 glow-effect bg-black">
+                <div id="galaxy-canvas-container" class="w-full h-full cursor-grab active:cursor-grabbing"></div>
+                <div class="absolute top-4 right-4 glass p-4 rounded-xl max-w-xs text-xs space-y-2">
+                    <h3 class="font-bold text-purple-300 text-sm">🌌 גלקסיית שביל החלב</h3>
+                    <p class="text-gray-300">הדמיית תלת-ממד של מעל 40,000 כוכבים וליבה גלקטית זוהרת.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: SEARCH & ARTICLES -->
+        <section id="tab-search" class="w-full flex-1 hidden flex-col gap-6">
+            <div class="glass p-6 sm:p-8 rounded-2xl border border-sky-500/30">
+                <h2 class="text-2xl font-bold text-sky-400 mb-2">מנוע חיפוש מאמרים ומחקרים אסטרונומיים</h2>
+                <p class="text-sm text-gray-300 mb-6">חפש נושאים כגון: חורים שחורים, כוכבי לכת ננסיים, סופרנובה, מים במאדים או משוואות איינשטיין.</p>
+                
+                <form onsubmit="handleArticleSearch(event)" class="flex gap-2">
+                    <input type="text" id="article-query" placeholder="הקלד נושא באסטרונומיה (לדוגמה: כוכב לכת דור שני)..." 
+                           class="flex-1 bg-space-900 border border-sky-700/60 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-sky-400">
+                    <button type="submit" class="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 px-6 py-3 rounded-xl font-bold text-sm shadow-lg transition">
+                        חפש
+                    </button>
+                </form>
+
+                <!-- Recommended Topic Badges -->
+                <div class="mt-4 flex flex-wrap items-center gap-2 text-xs">
+                    <span class="text-gray-400">הצעות לחיפוש:</span>
+                    <button onclick="setSearchTopic('כוכב לכת דור שני')" class="px-2.5 py-1 bg-space-800 hover:bg-space-700 text-sky-300 rounded-lg border border-sky-800">כוכב לכת דור שני</button>
+                    <button onclick="setSearchTopic('חורים שחורים')" class="px-2.5 py-1 bg-space-800 hover:bg-space-700 text-sky-300 rounded-lg border border-sky-800">חורים שחורים</button>
+                    <button onclick="setSearchTopic('הנקודה הכחולה הבהירה')" class="px-2.5 py-1 bg-space-800 hover:bg-space-700 text-sky-300 rounded-lg border border-sky-800">הנקודה הכחולה הבהירה</button>
+                    <button onclick="setSearchTopic('חוקי קפלר')" class="px-2.5 py-1 bg-space-800 hover:bg-space-700 text-sky-300 rounded-lg border border-sky-800">חוקי קפלר</button>
+                    <button onclick="setSearchTopic('כוכב לכת אריאל')" class="px-2.5 py-1 bg-space-800 hover:bg-space-700 text-sky-300 rounded-lg border border-sky-800">כוכב לכת אריאל</button>
+                </div>
+            </div>
+
+            <!-- Loader -->
+            <div id="search-loader" class="hidden text-center py-12">
+                <i class="fa-solid fa-spinner animate-spin text-3xl text-cyan-400 mb-2"></i>
+                <p class="text-sm text-gray-300">מחפש מאמרים ומסכם מידע עדכני מהרשת...</p>
+            </div>
+
+            <!-- Search Results Output -->
+            <div id="search-results-container" class="space-y-4"></div>
+        </section>
+
+        <!-- TAB 4: AI CHAT ASSISTANT -->
+        <section id="tab-ai" class="w-full flex-1 hidden flex-col h-[70vh]">
+            <div class="glass flex-1 rounded-2xl border border-purple-500/30 p-4 flex flex-col overflow-hidden">
+                <div class="pb-3 border-b border-gray-800 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-robot text-purple-400"></i>
+                        <h3 class="font-bold text-white text-sm">עוזר מחקר אסטרונומי - Astro AI</h3>
+                    </div>
+                    <span class="text-[10px] bg-purple-950 text-purple-300 px-2 py-0.5 rounded border border-purple-700/50">מחובר לרשת</span>
+                </div>
+
+                <!-- Chat Scroll Box -->
+                <div id="chat-messages" class="flex-1 overflow-y-auto py-4 space-y-4 px-2">
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">AI</div>
+                        <div class="bg-space-800 border border-gray-700/60 p-4 rounded-2xl rounded-tr-none text-sm text-gray-200 max-w-[85%] leading-relaxed shadow-md">
+                            שלום! אני עוזר ה-AI האסטרונומי שלך. שאל אותי כל שאלה על פיזיקה, גלקסיות, מערכת השמש, חורים שחורים או מאמרים מדעיים!
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Input Form -->
+                <form onsubmit="handleAIChatSubmit(event)" class="pt-3 border-t border-gray-800 flex gap-2">
+                    <input type="text" id="ai-user-input" placeholder="שאל את ה-AI שאלה באסטרונומיה..." 
+                           class="flex-1 bg-space-900 border border-purple-700/60 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-400">
+                    <button type="submit" class="bg-purple-600 hover:bg-purple-500 px-5 py-2.5 rounded-xl font-bold text-sm transition">
+                        שלח
+                    </button>
+                </form>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- SCRIPT SECTION -->
+    <script>
+        // Global variables for tabs & scenes
+        let currentTab = 'solar';
+        let solarScene, solarCamera, solarRenderer, solarControls;
+        let galaxyScene, galaxyCamera, galaxyRenderer;
+        let planets = {};
+        let orbitsVisible = true;
+
+        const planetData = {
+            sun: { name: 'השמש', desc: 'כוכב במרכז מערכת השמש המהווה 99.8% ממסחאה.', dist: '0 ק"מ', orbit: '0 ימים', size: 4, color: 0xffaa00 },
+            mercury: { name: 'חמה (Mercury)', desc: 'כוכב הלכת הקרוב ביותר לשמש, חם ומהיר מאוד.', dist: '57.9 מיליון ק"מ', orbit: '88 ימים', size: 0.6, distUnits: 8, color: 0xaaaaaa },
+            venus: { name: 'נוגה (Venus)', desc: 'כוכב הלכת החם ביותר בעל אטמוספירה צפופה.', dist: '108.2 מיליון ק"מ', orbit: '225 ימים', size: 0.9, distUnits: 12, color: 0xe3bb76 },
+            earth: { name: 'כדור הארץ (Earth)', desc: 'הבית שלנו, כוכב הלכת היחיד הידוע כבעל חיים ומים נוזליים.', dist: '149.6 מיליון ק"מ', orbit: '365.25 ימים', size: 1, distUnits: 16, color: 0x2b82c5 },
+            mars: { name: 'מאדים (Mars)', desc: 'כוכב הלכת האדום, בעל הרי געש ענקיים וערוצי מים יבשים.', dist: '227.9 מיליון ק"מ', orbit: '687 ימים', size: 0.7, distUnits: 20, color: 0xc4492d },
+            jupiter: { name: 'צדק (Jupiter)', desc: 'ענק הגזים הגדול ביותר במערכת השמש.', dist: '778.5 מיליון ק"מ', orbit: '12 שנים', size: 2.2, distUnits: 26, color: 0xb07f35 },
+            saturn: { name: 'שבתאי (Saturn)', desc: 'ידוע במערכת הטבעות המרהיבה והמורכבת שלו.', dist: '1.43 מיליארד ק"מ', orbit: '29 שנים', size: 1.8, distUnits: 32, color: 0xe2bf7d, hasRings: true },
+            uranus: { name: 'אורנוס (Uranus)', desc: 'ענק קרח המסתובב על צידו בצורה ייחודית.', dist: '2.87 מיליארד ק"מ', orbit: '84 שנים', size: 1.3, distUnits: 38, color: 0x4b70dd },
+            neptune: { name: 'נפטון (Neptune)', desc: 'כוכב הלכת המרוחק ביותר, ענקי ובעל רוחות סוערות.', dist: '4.5 מיליארד ק"מ', orbit: '165 שנים', size: 1.2, distUnits: 44, color: 0x274687 }
+        };
+
+        // Navigation tab handler
+        function switchTab(tab) {
+            currentTab = tab;
+            ['solar', 'galaxy', 'search', 'ai'].forEach(t => {
+                const el = document.getElementById('tab-' + t);
+                const nav = document.getElementById('nav-' + t);
+                if (t === tab) {
+                    el.classList.remove('hidden');
+                    el.classList.add('flex');
+                    nav.className = 'px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold transition bg-cyan-500/20 text-cyan-300 border border-cyan-500/40';
+                } else {
+                    el.classList.add('hidden');
+                    el.classList.remove('flex');
+                    nav.className = 'px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold transition text-gray-400 hover:text-white hover:bg-white/5';
+                }
+            });
+
+            if (tab === 'galaxy' && !galaxyScene) {
+                initGalaxy();
+            }
+        }
+
+        // ==========================================
+        // 1. THREE.JS SOLAR SYSTEM SIMULATION
+        // ==========================================
+        function initSolarSystem() {
+            const container = document.getElementById('solar-canvas-container');
+            if (!container) return;
+
+            solarScene = new THREE.Scene();
+            solarCamera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+            solarCamera.position.set(0, 25, 45);
+
+            solarRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            solarRenderer.setSize(container.clientWidth, container.clientHeight);
+            solarRenderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(solarRenderer.domElement);
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0x333333);
+            solarScene.add(ambientLight);
+
+            const sunLight = new THREE.PointLight(0xffffff, 2, 300);
+            solarScene.add(sunLight);
+
+            // Stars Background
+            const starsGeo = new THREE.BufferGeometry();
+            const starsCount = 3000;
+            const starPositions = new Float32Array(starsCount * 3);
+            for (let i = 0; i < starsCount * 3; i++) {
+                starPositions[i] = (Math.random() - 0.5) * 400;
+            }
+            starsGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+            const starsMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.8 });
+            const starField = new THREE.Points(starsGeo, starsMat);
+            solarScene.add(starField);
+
+            // Build Planets & Sun
+            Object.keys(planetData).forEach(key => {
+                const data = planetData[key];
+                const geo = new THREE.SphereGeometry(data.size, 32, 32);
+                let mat;
+                if (key === 'sun') {
+                    mat = new THREE.MeshBasicMaterial({ color: data.color });
+                } else {
+                    mat = new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.8 });
+                }
+                const mesh = new THREE.Mesh(geo, mat);
+                mesh.userData = { key: key };
+
+                if (key !== 'sun') {
+                    mesh.position.x = data.distUnits;
+                    
+                    // Add Orbit Line
+                    const orbitGeo = new THREE.RingGeometry(data.distUnits - 0.05, data.distUnits + 0.05, 64);
+                    const orbitMat = new THREE.MeshBasicMaterial({ color: 0x445577, side: THREE.DoubleSide });
+                    const orbitMesh = new THREE.Mesh(orbitGeo, orbitMat);
+                    orbitMesh.rotation.x = Math.PI / 2;
+                    orbitMesh.name = 'orbit_' + key;
+                    solarScene.add(orbitMesh);
+                }
+
+                // Add Rings for Saturn
+                if (data.hasRings) {
+                    const ringGeo = new THREE.RingGeometry(data.size + 0.5, data.size + 1.5, 32);
+                    const ringMat = new THREE.MeshBasicMaterial({ color: 0xc2a567, side: THREE.DoubleSide, transparent: true, opacity: 0.7 });
+                    const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+                    ringMesh.rotation.x = Math.PI / 2;
+                    mesh.add(ringMesh);
+                }
+
+                planets[key] = mesh;
+                solarScene.add(mesh);
+            });
+
+            // Mouse Drag Control Variables
+            let isDragging = false;
+            let previousMousePosition = { x: 0, y: 0 };
+
+            container.addEventListener('mousedown', () => isDragging = true);
+            container.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    const deltaMove = { x: e.offsetX - previousMousePosition.x, y: e.offsetY - previousMousePosition.y };
+                    solarScene.rotation.y += deltaMove.x * 0.005;
+                    solarScene.rotation.x += deltaMove.y * 0.005;
+                }
+                previousMousePosition = { x: e.offsetX, y: e.offsetY };
+            });
+            window.addEventListener('mouseup', () => isDragging = false);
+
+            // Zoom Control
+            container.addEventListener('wheel', (e) => {
+                solarCamera.position.z += e.deltaY * 0.03;
+                solarCamera.position.z = Math.max(10, Math.min(120, solarCamera.position.z));
+            });
+
+            // Raycaster for Planet Clicks
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2();
+
+            container.addEventListener('click', (e) => {
+                const rect = container.getBoundingClientRect();
+                mouse.x = ((e.clientX - rect.left) / container.clientWidth) * 2 - 1;
+                mouse.y = -((e.clientY - rect.top) / container.clientHeight) * 2 + 1;
+
+                raycaster.setFromCamera(mouse, solarCamera);
+                const intersects = raycaster.intersectObjects(Object.values(planets));
+
+                if (intersects.length > 0) {
+                    const clickedKey = intersects[0].object.userData.key;
+                    selectPlanet(clickedKey);
+                }
+            });
+
+            // Solar Animation Loop
+            let angle = 0;
+            function animateSolar() {
+                requestAnimationFrame(animateSolar);
+                angle += 0.005;
+
+                Object.keys(planets).forEach((key, index) => {
+                    if (key !== 'sun') {
+                        const speed = 0.5 / (index + 1);
+                        planets[key].position.x = Math.cos(angle * speed) * planetData[key].distUnits;
+                        planets[key].position.z = Math.sin(angle * speed) * planetData[key].distUnits;
+                        planets[key].rotation.y += 0.01;
+                    } else {
+                        planets[key].rotation.y += 0.002;
+                    }
+                });
+
+                solarRenderer.render(solarScene, solarCamera);
+            }
+            animateSolar();
+        }
+
+        function selectPlanet(key) {
+            const data = planetData[key];
+            if (!data) return;
+
+            const infoBox = document.getElementById('planet-info-box');
+            document.getElementById('planet-title').innerText = data.name;
+            document.getElementById('planet-desc').innerText = data.desc;
+            document.getElementById('planet-dist').innerText = data.dist;
+            document.getElementById('planet-orbit').innerText = data.orbit;
+            infoBox.classList.remove('hidden');
+        }
+
+        function resetSolarView() {
+            solarScene.rotation.set(0, 0, 0);
+            solarCamera.position.set(0, 25, 45);
+        }
+
+        function toggleOrbits() {
+            orbitsVisible = !orbitsVisible;
+            Object.keys(planetData).forEach(key => {
+                const orb = solarScene.getObjectByName('orbit_' + key);
+                if (orb) orb.visible = orbitsVisible;
+            });
+        }
+
+        // ==========================================
+        // SEARCH & AI HELPER FUNCTIONS
+        // ==========================================
+        function setSearchTopic(topic) {
+            const input = document.getElementById('article-query');
+            if (input) {
+                input.value = topic;
+                handleArticleSearch(new Event('submit'));
+            }
+        }
+
+        async function handleArticleSearch(event) {
+            if (event) event.preventDefault();
+            const queryInput = document.getElementById('article-query');
+            const query = queryInput ? queryInput.value.trim() : '';
+            if (!query) return;
+
+            const loader = document.getElementById('search-loader');
+            const resultsContainer = document.getElementById('search-results-container');
+
+            if (loader) loader.classList.remove('hidden');
+            if (resultsContainer) resultsContainer.innerHTML = '';
+
+            try {
+                const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: `עבור הנושא האסטרונומי "${query}", ספק:
+1. 📌 **סיכום מנהלים של המאמרים והמחקרים** העדכניים בתחום.
+2. ניתוח מעמיק ומפורט בעברית.
+3. ציין מקורות ומאמרים רלוונטיים מאתרים כמו מכון דוידסון, הידען, נאס"א ו-Scientific American עם קישורים ישירים.`
+                            }]
+                        }],
+                        tools: [{ googleSearch: {} }]
+                    })
+                });
+
+                const data = await response.json();
+                const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'לא נמצאו תוצאות.';
+                
+                // Extract search attributions/grounding links
+                const groundingChunks = data.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+                let linksHtml = '';
+                
+                if (groundingChunks.length > 0) {
+                    linksHtml = `
+                        <div class="mt-4 pt-4 border-t border-gray-700/60">
+                            <h4 class="text-xs font-bold text-sky-300 mb-2">🔗 מקורות ומאמרים ברשת:</h4>
+                            <div class="flex flex-wrap gap-2">
+                                ${groundingChunks.map(chunk => chunk.web?.uri ? `
+                                    <a href="${chunk.web.uri}" target="_blank" class="text-xs bg-sky-950/80 hover:bg-sky-900 text-sky-300 px-3 py-1.5 rounded-lg border border-sky-700/60 transition flex items-center gap-1">
+                                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                                        <span>${chunk.web.title || 'מאמר מקורי'}</span>
+                                    </a>
+                                ` : '').join('')}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Fallback search link
+                    linksHtml = `
+                        <div class="mt-4 pt-4 border-t border-gray-700/60">
+                            <h4 class="text-xs font-bold text-sky-300 mb-2">🔗 קישור ישיר לחיפוש מאמרים ברשת:</h4>
+                            <a href="https://www.google.com/search?q=${encodeURIComponent(query + ' אסטרונומיה מאמר')}" target="_blank" class="inline-flex items-center gap-1.5 text-xs bg-purple-900/60 hover:bg-purple-800 text-purple-200 px-3 py-1.5 rounded-lg border border-purple-700/60 transition">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                <span>חפש מאמרים נוספים בגוגל סקולר ודוידסון</span>
+                            </a>
+                        </div>
+                    `;
+                }
+
+                if (resultsContainer) {
+                    resultsContainer.innerHTML = `
+                        <div class="glass p-6 rounded-2xl border border-gray-700/60 shadow-xl space-y-4">
+                            <h3 class="text-xl font-bold text-sky-400">תוצאות וסיכום עבור: ${query}</h3>
+                            <div class="text-sm text-gray-200 leading-relaxed whitespace-pre-line">${text}</div>
+                            ${linksHtml}
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                if (resultsContainer) {
+                    resultsContainer.innerHTML = `
+                        <div class="glass p-6 rounded-2xl border border-red-500/30 text-red-300 text-sm">
+                            שגיאה בחיבור למנוע החיפוש. אנא נסה שוב.
+                        </div>
+                    `;
+                }
+            } finally {
+                if (loader) loader.classList.add('hidden');
+            }
+        }
+
+        async function handleAIChatSubmit(event) {
+            if (event) event.preventDefault();
+            const input = document.getElementById('ai-user-input');
+            const message = input ? input.value.trim() : '';
+            if (!message) return;
+
+            const chatMessages = document.getElementById('chat-messages');
+            input.value = '';
+
+            // User Message
+            const userMsgDiv = document.createElement('div');
+            userMsgDiv.className = 'flex items-start gap-3 justify-end';
+            userMsgDiv.innerHTML = `
+                <div class="bg-purple-900/40 border border-purple-500/30 p-4 rounded-2xl rounded-tl-none text-sm text-white max-w-[85%] shadow-md">
+                    ${message}
+                </div>
+                <div class="w-8 h-8 rounded-full bg-sky-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">אתה</div>
+            `;
+            chatMessages.appendChild(userMsgDiv);
+
+            // Loading AI Message
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'flex items-start gap-3';
+            loadingDiv.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">AI</div>
+                <div class="bg-space-800 border border-gray-700/60 p-4 rounded-2xl rounded-tr-none text-sm text-gray-400 flex items-center gap-2">
+                    <i class="fa-solid fa-spinner animate-spin text-purple-400"></i>
+                    <span>מעבד ומחפש במאמרים...</span>
+                </div>
+            `;
+            chatMessages.appendChild(loadingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            try {
+                const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: `אתה אסטרונום מומחה ועוזר מחקר AI. ענה בעברית על השאלה: "${message}".
+פתח בתיבת **📌 סיכום מנהלים של המאמרים והמחקרים בנושא**, לאחר מכן הרחב בתשובה מדעית מדויקת.`
+                            }]
+                        }],
+                        tools: [{ googleSearch: {} }]
+                    })
+                });
+
+                const data = await response.json();
+                const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || 'מצטער, לא הצלחתי לעבד את התשובה.';
+                
+                const groundingChunks = data.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+                let linksHtml = '';
+                if (groundingChunks.length > 0) {
+                    linksHtml = `
+                        <div class="mt-3 pt-3 border-t border-gray-700/60 flex flex-wrap gap-1.5">
+                            ${groundingChunks.map(chunk => chunk.web?.uri ? `
+                                <a href="${chunk.web.uri}" target="_blank" class="text-[11px] bg-purple-950/80 hover:bg-purple-900 text-purple-300 px-2 py-1 rounded border border-purple-700/50 flex items-center gap-1">
+                                    <i class="fa-solid fa-link text-[9px]"></i>
+                                    <span>${chunk.web.title || 'מקור'}</span>
+                                </a>
+                            ` : '').join('')}
+                        </div>
+                    `;
+                }
+
+                loadingDiv.innerHTML = `
+                    <div class="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">AI</div>
+                    <div class="bg-space-800 border border-gray-700/60 p-4 rounded-2xl rounded-tr-none text-sm text-gray-200 max-w-[85%] leading-relaxed shadow-md space-y-2">
+                        <div class="whitespace-pre-line">${aiResponse}</div>
+                        ${linksHtml}
+                    </div>
+                `;
+            } catch (err) {
+                loadingDiv.innerHTML = `
+                    <div class="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">AI</div>
+                    <div class="bg-space-800 border border-red-500/40 p-4 rounded-2xl rounded-tr-none text-sm text-red-300">
+                        אירעה שגיאה בחיבור ל-AI. אנא נסה שוב.
+                    </div>
+                `;
+            }
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // ==========================================
+        // 2. THREE.JS MILKY WAY GALAXY SIMULATION
+        // ==========================================
+        function initGalaxy() {
+            const container = document.getElementById('galaxy-canvas-container');
+            if (!container) return;
+
+            galaxyScene = new THREE.Scene();
+            galaxyCamera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+            galaxyCamera.position.set(0, 30, 50);
+
+            galaxyRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            galaxyRenderer.setSize(container.clientWidth, container.clientHeight);
+            galaxyRenderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(galaxyRenderer.domElement);
+
+            // Galaxy Particle Spiral Structure
+            const count = 40000;
+            const positions = new Float32Array(count * 3);
+            const colors = new Float32Array(count * 3);
+
+            const colorInside = new THREE.Color(0xffaa55);
+            const colorOutside = new THREE.Color(0x3388ff);
+
+            for (let i = 0; i < count; i++) {
+                const i3 = i * 3;
+                const radius = Math.random() * 35;
+                const spinAngle = radius * 0.8;
+                const branchAngle = ((i % 4) * Math.PI * 2) / 4;
+
+                const randomX = (Math.random() - 0.5) * (Math.random() * 2);
+                const randomY = (Math.random() - 0.5) * (Math.random() * 2);
+                const randomZ = (Math.random() - 0.5) * (Math.random() * 2);
+
+                positions[i3] = Math.cos(branchAngle + spinAngle) * radius + randomX;
+                positions[i3 + 1] = randomY * (1 - radius / 35);
+                positions[i3 + 2] = Math.sin(branchAngle + spinAngle) * radius + randomZ;
+
+                const mixedColor = colorInside.clone();
+                mixedColor.lerp(colorOutside, radius / 35);
+                colors[i3] = mixedColor.r;
+                colors[i3 + 1] = mixedColor.g;
+                colors[i3 + 2] = mixedColor.b;
+            }
+
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+            const material = new THREE.PointsMaterial({
+                size: 0.2,
+                sizeAttenuation: true,
+                depthWrite: false,
+                blending: THREE.AdditiveBlending,
+                vertexColors: true
+            });
+
+            const galaxy = new THREE.Points(geometry, material);
+            galaxyScene.add(galaxy);
+
+            // Galaxy Animation Loop
+            function animateGalaxy() {
+                requestAnimationFrame(animateGalaxy);
+                galaxy.rotation.y += 0.0015;
+                galaxyRenderer.render(galaxyScene, galaxyCamera);
+            }
+            animateGalaxy();
+        }
+
+        // Initialize App on Load
+        window.onload = function() {
+            initSolarSystem();
+        };
+
+        // Window Resize Handler
+        window.onresize = function() {
+            if (solarCamera && solarRenderer) {
+                const container = document.getElementById('solar-canvas-container');
+                if (container) {
+                    solarCamera.aspect = container.clientWidth / container.clientHeight;
+                    solarCamera.updateProjectionMatrix();
+                    solarRenderer.setSize(container.clientWidth, container.clientHeight);
+                }
+            }
+            if (galaxyCamera && galaxyRenderer) {
+                const container = document.getElementById('galaxy-canvas-container');
+                if (container) {
+                    galaxyCamera.aspect = container.clientWidth / container.clientHeight;
+                    galaxyCamera.updateProjectionMatrix();
+                    galaxyRenderer.setSize(container.clientWidth, container.clientHeight);
+                }
+            }
+        };
+    </script>
+</body>
+</html>

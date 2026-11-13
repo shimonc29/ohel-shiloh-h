@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disney+ | דיסני+</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'disney-dark': '#040714',
+                        'disney-blue': '#0072d2',
+                        'disney-hover': '#1a233a',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #040714;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+        /* Custom scrollbar for horizontal movie rows */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* Brand Card Glow Effect */
+        .brand-card {
+            background: linear-gradient(rgb(48, 54, 74), rgb(26, 31, 44));
+            box-shadow: rgb(0 0 0 / 69%) 0px 26px 30px -10px, rgb(0 0 0 / 73%) 0px 16px 10px -10px;
+            transition: all 250ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 0s;
+        }
+        .brand-card:hover {
+            transform: scale(1.05);
+            border-color: rgba(255, 255, 255, 0.8);
+            box-shadow: rgb(0 0 0 / 80%) 0px 40px 58px -16px, rgb(0 0 0 / 72%) 0px 30px 22px -10px;
+        }
+        /* Movie Card Hover Animation */
+        .movie-card {
+            transition: all 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 0s;
+        }
+        .movie-card:hover {
+            transform: scale(1.08);
+            box-shadow: rgb(0 0 0 / 80%) 0px 40px 58px -16px;
+            z-index: 50;
+        }
+    </style>
+</head>
+<body class="bg-disney-dark text-white min-h-screen flex flex-col selection:bg-cyan-500 selection:text-white">
+
+    <!-- Navbar -->
+    <header class="fixed top-0 left-0 right-0 z-50 bg-[#040714]/90 backdrop-blur-md px-6 md:px-12 py-4 flex items-center justify-between transition-all duration-300">
+        <div class="flex items-center space-x-8 space-x-reverse">
+            <!-- Disney+ Logo -->
+            <a href="#" onclick="switchTab('home')" class="flex items-center cursor-pointer group">
+                <span class="text-2xl font-black tracking-widest text-cyan-400 group-hover:text-white transition-colors duration-200">DISNEY+</span>
+            </a>
+            
+            <!-- Navigation Links -->
+            <nav class="hidden md:flex items-center space-x-6 space-x-reverse font-medium text-sm">
+                <button onclick="switchTab('home')" id="nav-home" class="flex items-center space-x-2 space-x-reverse text-white border-b-2 border-white pb-1 transition-all">
+                    <i data-lucide="home" class="w-4 h-4 ml-1"></i>
+                    <span>ראשי</span>
+                </button>
+                <button onclick="switchTab('movies')" id="nav-movies" class="flex items-center space-x-2 space-x-reverse text-gray-400 hover:text-white pb-1 transition-all">
+                    <i data-lucide="film" class="w-4 h-4 ml-1"></i>
+                    <span>סרטים</span>
+                </button>
+                <button onclick="switchTab('series')" id="nav-series" class="flex items-center space-x-2 space-x-reverse text-gray-400 hover:text-white pb-1 transition-all">
+                    <i data-lucide="tv" class="w-4 h-4 ml-1"></i>
+                    <span>סדרות</span>
+                </button>
+                <button onclick="switchTab('watchlist')" id="nav-watchlist" class="flex items-center space-x-2 space-x-reverse text-gray-400 hover:text-white pb-1 transition-all">
+                    <i data-lucide="bookmark" class="w-4 h-4 ml-1"></i>
+                    <span>הרשימה שלי</span>
+                    <span id="watchlist-count" class="bg-cyan-500 text-black text-xs px-1.5 py-0.2 rounded-full font-bold">0</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- Right Side: Search & Profile -->
+        <div class="flex items-center space-x-4 space-x-reverse">
+            <!-- Audience Filter Toggle (Kids / Adults) -->
+            <div class="hidden sm:flex items-center bg-[#191b24] p-1 rounded-full border border-gray-700">
+                <button onclick="setAudience('all')" id="audience-all" class="px-3 py-1 text-xs rounded-full font-bold bg-cyan-500 text-black transition-all">הכל</button>
+                <button onclick="setAudience('kids')" id="audience-kids" class="px-3 py-1 text-xs rounded-full text-gray-300 hover:text-white transition-all">ילדים</button>
+                <button onclick="setAudience('adults')" id="audience-adults" class="px-3 py-1 text-xs rounded-full text-gray-300 hover:text-white transition-all">מבוגרים</button>
+            </div>
+
+            <!-- Live Search Bar -->
+            <div class="relative flex items-center">
+                <input type="text" id="search-input" placeholder="חיפוש סרטים וסדרות..." oninput="handleSearch(this.value)" 
+                    class="bg-[#191b24] text-white text-sm rounded-full px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-cyan-400 w-36 md:w-64 transition-all duration-300">
+                <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute right-3 pointer-events-none"></i>
+            </div>
+
+            <!-- Profile Avatar -->
+            <div class="relative group cursor-pointer">
+                <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&h=100&q=80" alt="פרופיל" class="w-10 h-10 rounded-full border-2 border-transparent group-hover:border-white transition-all">
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container Content -->
+    <main class="flex-grow pt-20">
+
+        <!-- HOME TAB VIEW -->
+        <div id="view-home" class="space-y-8 pb-16">
+            <!-- Hero Carousel Banner -->
+            <section class="relative px-6 md:px-12 pt-6">
+                <div class="relative rounded-2xl overflow-hidden shadow-2xl h-[450px] md:h-[520px] group border border-gray-800">
+                    <div id="hero-bg" class="absolute inset-0 bg-cover bg-center transition-all duration-700 filter brightness-75 scale-105"></div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#040714] via-[#040714]/40 to-transparent"></div>
+                    <div class="absolute inset-0 bg-gradient-to-l from-[#040714]/90 via-transparent to-transparent"></div>
+                    
+                    <div class="absolute bottom-12 right-12 max-w-xl space-y-4">
+                        <h1 id="hero-title" class="text-3xl md:text-5xl font-extrabold tracking-wide drop-shadow-lg">כותרת הסרט</h1>
+                        <p id="hero-desc" class="text-sm md:text-base text-gray-300 line-clamp-3 leading-relaxed drop-shadow">תיאור קצר של הסרט יופיע כאן עם פרטים מרתקים על העלילה.</p>
+                        <div class="flex items-center space-x-4 space-x-reverse pt-2">
+                            <button id="hero-play-btn" onclick="playCurrentHero()" class="flex items-center space-x-2 space-x-reverse bg-white text-black hover:bg-gray-200 font-bold px-8 py-3 rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105">
+                                <i data-lucide="play" class="fill-current w-5 h-5 ml-1"></i>
+                                <span>צפה עכשיו</span>
+                            </button>
+                            <button id="hero-watchlist-btn" onclick="toggleHeroWatchlist()" class="flex items-center space-x-2 space-x-reverse bg-[#252836]/80 hover:bg-[#35394b] text-white font-semibold px-6 py-3 rounded-lg backdrop-blur-md border border-gray-600 transition-all duration-200 transform hover:scale-105">
+                                <i data-lucide="plus" class="w-5 h-5 ml-1"></i>
+                                <span>הוסף לרשימה</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Carousel Controls -->
+                    <div class="absolute bottom-6 left-6 flex space-x-2 space-x-reverse">
+                        <button onclick="prevHero()" class="bg-black/50 hover:bg-black/80 p-2 rounded-full text-white backdrop-blur-md transition-colors"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
+                        <button onclick="nextHero()" class="bg-black/50 hover:bg-black/80 p-2 rounded-full text-white backdrop-blur-md transition-colors"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Brand Hubs Section -->
+            <section class="px-6 md:px-12">
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
+                    <div onclick="filterByBrand('דיסני')" class="brand-card rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer border border-gray-700/50 h-28 group">
+                        <span class="text-xl font-bold tracking-wider text-cyan-300 group-hover:text-white transition-colors">דיסני</span>
+                        <span class="text-xs text-gray-400 mt-1">קלאסיקות ואנימציה</span>
+                    </div>
+                    <div onclick="filterByBrand('פיקסאר')" class="brand-card rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer border border-gray-700/50 h-28 group">
+                        <span class="text-xl font-bold tracking-wider text-amber-300 group-hover:text-white transition-colors">פיקסאר</span>
+                        <span class="text-xs text-gray-400 mt-1">עולמות קסומים</span>
+                    </div>
+                    <div onclick="filterByBrand('מארוול')" class="brand-card rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer border border-gray-700/50 h-28 group">
+                        <span class="text-xl font-bold tracking-wider text-red-400 group-hover:text-white transition-colors">מארוול</span>
+                        <span class="text-xs text-gray-400 mt-1">גיבורי-על ואקשן</span>
+                    </div>
+                    <div onclick="filterByBrand('מלחמת הכוכבים')" class="brand-card rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer border border-gray-700/50 h-28 group">
+                        <span class="text-xl font-bold tracking-wider text-yellow-300 group-hover:text-white transition-colors">מלחמת הכוכבים</span>
+                        <span class="text-xs text-gray-400 mt-1">גלקסיה רחוקה</span>
+                    </div>
+                    <div onclick="filterByBrand('נשיונל ג\'יאוגרפיק')" class="brand-card rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer border border-gray-700/50 h-28 group col-span-2 sm:col-span-1">
+                        <span class="text-lg font-bold tracking-wider text-emerald-300 group-hover:text-white transition-colors">נשיונל ג'יאוגרפיק</span>
+                        <span class="text-xs text-gray-400 mt-1">טבע ועולם</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Movie Rows Sections -->
+            <div id="movie-rows-container" class="space-y-10 px-6 md:px-12">
+                <!-- Rows will be dynamically populated or filtered -->
+            </div>
+        </div>
+
+        <!-- MOVIES TAB VIEW -->
+        <div id="view-movies" class="hidden px-6 md:px-12 py-6 space-y-6">
+            <h2 class="text-2xl font-bold border-r-4 border-cyan-400 pr-3">כל הסרטים</h2>
+            <div id="all-movies-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                <!-- Populated via JS -->
+            </div>
+        </div>
+
+        <!-- SERIES TAB VIEW -->
+        <div id="view-series" class="hidden px-6 md:px-12 py-6 space-y-6">
+            <h2 class="text-2xl font-bold border-r-4 border-cyan-400 pr-3">כל הסדרות</h2>
+            <div id="all-series-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                <!-- Populated via JS -->
+            </div>
+        </div>
+
+        <!-- WATCHLIST TAB VIEW -->
+        <div id="view-watchlist" class="hidden px-6 md:px-12 py-6 space-y-6">
+            <h2 class="text-2xl font-bold border-r-4 border-cyan-400 pr-3">הרשימה שלי</h2>
+            <div id="watchlist-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                <!-- Populated via JS -->
+            </div>
+            <div id="empty-watchlist" class="hidden text-center py-20 space-y-4">
+                <i data-lucide="bookmark-plus" class="w-16 h-16 mx-auto text-gray-500"></i>
+                <p class="text-gray-400 text-lg">הרשימה שלך ריקה. הוסף סרטים וסדרות כדי לצפות בהם מאוחר יותר!</p>
+            </div>
+        </div>
+
+        <!-- SEARCH RESULTS VIEW -->
+        <div id="view-search" class="hidden px-6 md:px-12 py-6 space-y-6">
+            <h2 id="search-results-title" class="text-2xl font-bold border-r-4 border-cyan-400 pr-3">תוצאות חיפוש</h2>
+            <div id="search-results-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                <!-- Populated via JS -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Movie Details Modal -->
+    <div id="movie-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300 p-4">
+        <div id="modal-content" class="bg-[#121624] w-full max-w-3xl rounded-2xl overflow-hidden border border-gray-700 shadow-2xl transform scale-95 transition-transform duration-300 max-h-[90vh] flex flex-col">
+            <!-- Modal Header / Backdrop -->
+            <div class="relative h-64 md:h-80 w-full bg-cover bg-center" id="modal-bg">
+                <div class="absolute inset-0 bg-gradient-to-t from-[#121624] via-[#121624]/40 to-transparent"></div>
+                <button onclick="closeModal()" class="absolute top-4 left-4 bg-black/60 hover:bg-black p-2 rounded-full text-white transition-colors">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+                <div class="absolute bottom-6 right-6 space-y-2">
+                    <h3 id="modal-title" class="text-3xl font-extrabold text-white drop-shadow">כותרת הסרט</h3>
+                    <div class="flex items-center space-x-3 space-x-reverse text-sm font-semibold text-gray-300">
+                        <span id="modal-year" class="bg-gray-800 px-2 py-0.5 rounded">2024</span>
+                        <span id="modal-rating" class="border border-gray-500 px-1.5 py-0.5 rounded text-xs">PG</span>
+                        <span id="modal-genre" class="text-cyan-400">פנטזיה</span>
+                        <span id="modal-score" class="flex items-center text-amber-400"><i data-lucide="star" class="w-4 h-4 fill-current ml-1"></i><span id="modal-score-val">4.8</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6 md:p-8 space-y-6 overflow-y-auto">
+                <div class="flex flex-wrap items-center gap-4">
+                    <button onclick="playModalMovie()" class="flex items-center space-x-2 space-x-reverse bg-white text-black hover:bg-gray-200 font-bold px-6 py-2.5 rounded-lg shadow transition-all transform hover:scale-105">
+                        <i data-lucide="play" class="fill-current w-5 h-5 ml-1"></i>
+                        <span>צפה עכשיו</span>
+                    </button>
+                    <button id="modal-watchlist-btn" onclick="toggleModalWatchlist()" class="flex items-center space-x-2 space-x-reverse bg-[#252836] hover:bg-[#35394b] text-white font-semibold px-6 py-2.5 rounded-lg border border-gray-600 transition-all">
+                        <i id="modal-watchlist-icon" data-lucide="plus" class="w-5 h-5 ml-1"></i>
+                        <span id="modal-watchlist-text">הוסף לרשימה</span>
+                    </button>
+                    <!-- WhatsApp Share Button -->
+                    <button onclick="shareOnWhatsApp()" class="flex items-center space-x-2 space-x-reverse bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-5 py-2.5 rounded-lg transition-all shadow-md">
+                        <i data-lucide="share-2" class="w-5 h-5 ml-1"></i>
+                        <span>שתף בוואטסאפ</span>
+                    </button>
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="text-lg font-bold text-gray-200">תקציר</h4>
+                    <p id="modal-synopsis" class="text-gray-300 leading-relaxed text-sm md:text-base">תקציר מלא על העלילה יופיע כאן.</p>
+                </div>
+
+                <div class="space-y-2 pt-2 border-t border-gray-800">
+                    <h4 class="text-sm font-bold text-gray-400">שחקנים ראשיים:</h4>
+                    <p id="modal-cast" class="text-gray-200 text-sm">שחקן 1, שחקן 2, שחקן 3</p>
+                </div>
+
+                <!-- Reviews Section -->
+                <div class="space-y-4 pt-4 border-t border-gray-800">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-lg font-bold text-white flex items-center">
+                            <i data-lucide="message-square" class="w-5 h-5 ml-2 text-cyan-400"></i>
+                            ביקורות משתמשים
+                        </h4>
+                        <span id="reviews-count" class="text-xs text-gray-400 bg-gray-800 px-2.5 py-1 rounded-full">0 ביקורות</span>
+                    </div>
+
+                    <!-- Add Review Form -->
+                    <div class="bg-[#191b24] p-4 rounded-xl border border-gray-800 space-y-3">
+                        <h5 class="text-sm font-semibold text-gray-300">הוסף ביקורת משלך:</h5>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <input type="text" id="review-author" placeholder="השם שלך..." class="bg-[#121624] text-white text-sm px-3 py-2 rounded-lg border border-gray-700 focus:outline-none focus:ring-1 focus:ring-cyan-400">
+                            <select id="review-rating" class="bg-[#121624] text-white text-sm px-3 py-2 rounded-lg border border-gray-700 focus:outline-none focus:ring-1 focus:ring-cyan-400">
+                                <option value="5">⭐⭐⭐⭐⭐ (מעולה - 5)</option>
+                                <option value="4">⭐⭐⭐⭐ (טוב מאוד - 4)</option>
+                                <option value="3">⭐⭐⭐ (בסדר - 3)</option>
+                                <option value="2">⭐⭐ (טעון שיפור - 2)</option>
+                                <option value="1">⭐ (גרוע - 1)</option>
+                            </select>
+                        </div>
+                        <textarea id="review-text" placeholder="כתוב את דעתך על הסרט..." rows="2" class="w-full bg-[#121624] text-white text-sm px-3 py-2 rounded-lg border border-gray-700 focus:outline-none focus:ring-1 focus:ring-cyan-400"></textarea>
+                        <button onclick="submitReview()" class="bg-cyan-500 hover:bg-cyan-400 text-black font-bold px-4 py-2 rounded-lg text-sm transition-colors">שלח ביקורת</button>
+                    </div>
+
+                    <!-- Reviews List Container -->
+                    <div id="modal-reviews-list" class="space-y-3 max-h-48 overflow-y-auto pr-1">
+                        <!-- Populated via JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Video Player Simulation Modal -->
+    <div id="player-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/95 opacity-0 pointer-events-none transition-opacity duration-300 p-4">
+        <div class="w-full max-w-4xl bg-black rounded-2xl overflow-hidden border border-gray-800 shadow-2xl relative aspect-video flex flex-col items-center justify-center">
+            <button onclick="closePlayer()" class="absolute top-4 left-4 bg-white/10 hover:bg-white/20 p-2.5 rounded-full text-white transition-colors z-10">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+            <div class="text-center space-y-4 px-6">
+                <div class="w-16 h-16 bg-cyan-500/20 text-cyan-400 rounded-full flex items-center justify-center mx-auto animate-pulse">
+                    <i data-lucide="play" class="w-8 h-8 fill-current"></i>
+                </div>
+                <h3 id="player-title" class="text-2xl font-bold">מנגן כעת: סרט לדוגמה</h3>
+                <p class="text-gray-400 text-sm">חוויית סטרימינג מלאה באיכות 4K Ultra HD פעילה.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-[#02040a] py-10 px-6 md:px-12 mt-16 text-center border-t border-gray-900 space-y-4">
+        <span class="text-xl font-black tracking-widest text-cyan-400">DISNEY+</span>
+        <div class="flex flex-wrap justify-center space-x-6 space-x-reverse text-xs text-gray-400">
+            <a href="#" class="hover:text-white transition-colors">מדיניות פרטיות</a>
+            <a href="#" class="hover:text-white transition-colors">תנאי שימוש</a>
+            <a href="#" class="hover:text-white transition-colors">עזרה</a>
+            <a href="#" class="hover:text-white transition-colors">ניהול חשבון</a>
+        </div>
+        <p class="text-xs text-gray-600">© 2026 Disney וגופים קשורים. כל הזכויות שמורות.</p>
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Database of Movies & Series (Massive catalog of Disney, Pixar, Marvel, Star Wars, NatGeo)
+        const mediaData = [
+            {
+                id: 1,
+                title: "מואנה 2",
+                category: "סרטים",
+                brand: "דיסני",
+                audience: "kids",
+                row: "מומלצים עבורך",
+                year: "2024",
+                rating: "PG",
+                genre: "אנימציה / הרפתקאות",
+                synopsis: "מואנה יוצאת למסע חדש ומפעים אל ימים רחוקים באוקיינוסיה יחד עם מאווי וחבורה של מלחים חדשים בעקבות קריאה מסתורית מהאבות הקדמונים.",
+                cast: "אולי קרבליו, דוויין ג'ונسون",
+                bg: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1600&q=80",
+                poster: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=600&q=80"
+            },
+            {
+                id: 2,
+                title: "הקול בראש 2",
+                category: "סרטים",
+                brand: "פיקסאר",
+                audience: "kids",
+                row: "טרנדי עכשיו",
+                year: "2024",
+                rating: "PG",
+                genre: "אנימציה / קומדיה",
+                synopsis: "במהלך שנת ההתבגרות של ריילי, מפקדת הרגשות בראשה עוברת מהפך פתאומי עם הגעתן של דמויות חדשות ומפתיעות ובראשן חרדה.",
+                cast: "איימי פוהלר, מאיה הוק",
+                bg: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1600&q=80",
+                poster: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=600&q=80"
+            },
+            {
+                id: 3,
+                title: "דדפול וולברין",
+                category: "סרטים",
+                brand: "מארוול",
+                audience: "adults",
+                row: "מומלצים עבורך",
+                year: "2024",
+                rating: "16+",
+                genre: "אקשן / קומדיה",
+                synopsis: "צמד גיבורי-העל הציניים והפרועים ביותר בעולם מתאחדים למשימה קורעת מצחוק ומלאת אקשן חוצה יקומים שמסכנת את היקום כולו.",
+                cast: "ראיין ריינולדס, יו ג'קמן",
+                bg: "https://images.unsplash.com/photo-1635805737707-575885ab0820?auto=format&fit=crop&w=1600&q=80",
+                poster: "https://images.unsplash.com/photo-1635805737707-575885ab0820?auto=format&fit=crop&w=600&q=80"
+            },
+            {
+                id: 4,
+                title: "מלחמת הכוכבים: האסכולה",
+                category: "סדרות",
+                brand: "מלחמת הכוכבים",
+                audience: "adults",
+                row: "אנימציה ומד\"ב",
+                year: "2024",
+                rating: "12+",
+                genre: "מדע בדיוני / הרפתקאות",
+                synopsis: "חקירה מרתקת של עידן הרפובליקה העליונה, שבו סודות אפלים מתגלים והכוח מתחיל להשתנות בגלקסיה הרחוקה.",
+                cast: "אמנדלה סטנברג, לי ג'ונג-ג'ה",
+                bg: "https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?auto=format&fit=crop&w=1600&q=80",
+                poster: "https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?auto=format&fit=crop&w=600&q=80"
+            },
+            {
+                id: 5,
+                title: "כדור הארץ המופלא",
+                category: "סדרות",
+                brand: "נשיונל ג'יאוגרפיק",
+                audience: "all",
+                row: "קלאסיקות אהובות",
+                year: "2023",
+                rating: "כל העת",
+                genre: "טבע / דוקומנטרי",
+                synopsis: "מסע עוצר נשימה אל הפינות המרוחקות והקסומות ביותר בכדור הארץ, המתעד את חייהם המופלאים של בעלי החיים בסביבתם הטבעית.",
+                cast: "דייוויד אטנבורו",
+                bg: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1600&q=80",
+                poster: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=600&q=80"
+            },
+            {
+                id: 6,
+                title: "לוקי - עונה 2",
+                category: "סדרות",
+                brand: "מארוול",
+                audience: "adults",
+                row: "טרנדי עכשיו",
+                year: "2023",
+                rating: "12+",
+                genre: "מדע בדיוני / פנטזיה",
+                synopsis: "אל התעלולים ממשיך במסעו המטורף לשמירה על ציר הזמן הקדוש לצד סוכנות TVA וחבריו הנאמנים.",
+                cast: "טום הידלסטון, אוון ווילסון",
+                bg: "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=1600&q=80",
+                poster: "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=600&q=80"
+            },
+            {
+                id: 7,
+                title: "האריות של סרנגטי",
+                category: "סרטים",
+                brand: "נשיונל ג'יאוגרפיק",
+                audience: "all",
+                row: "קלאסיקות אהובות",
+                year: "2022",
+                rating: "כל העת",
+                genre: "טבע",
+                synopsis: "דרמה אמיתית על שרידותה של להקת אריות אחת באסואנה הפראית של אפריקה.",
+                cast: "צוות נשיונל ג'יאוגרפיק",
+                bg: "https://images.unsplash.com/photo-1534177616072-ef7dc120449d?auto=format&fit=crop&w=1600&q=80",
+                poster: "https://images.unsplash.com/photo-1534177616072-ef7dc120449d?auto=format&fit=crop&w=600&q=80"
+            },
+            {
+                id: 8,
+                title: "משפחת סופר-על 2",
+                category: "סרטים",
+                brand: "פיקסאר",
+                audience: "kids",
+                row: "אנימציה ומד\"ב",
+                year: "2018",
+                rating: "PG",
+                genre: "אנימציה / משפחה",
+                synopsis: "הלן יוצאת למסע להצלת המוניטין של גיבורי העל, בזמן שובב נשאר בבית לטפל בתינוק ג'ק-ג'ק וביכולותיו החדשות.",
+                cast: "קרייג ט. נלסון, הולי האנטר",
+                bg: "https://images.unsplash.com/photo-1563089145-599997674d42?auto=format&fit=crop&w=1600&q=80",
+                poster: "https://images.unsplash.com/photo-1563089145-599997674d42?auto=format&fit=crop&w=600&q=80"
+            },
+            {
+                id: 9,
+                title: "מלך האריות",
+                category: "סרטים",
+                brand: "דיסני",
+                audience: "kids",
+                row: "קלאסיקות אהובות",
+                year: "1994",
+                rating: "כל העת",
+                genre: "אנימציה / קלאסיקה",
+                synopsis: "סיפורו המרגש של סימبا, גור האריות הצעיר שיורש את כס המלכות ויוצא למסע התבגרות בעקבות אביו.",
+                cast: "מתיו ברודריק, ג'יימס ארל ג'ונס",
+                bg: "https://images.unsplash.com/photo-1561731216-c3a4d99437d5?auto=format&fit=crop&w=1600&q=80",
+                poster: "https://images.unsplash.com/photo-1561731216-c3a4d99437d5?auto=format&fit=crop&w=600&q=80"
+            },
+            {
+                id: 10,
+                title: "הנוקמים: סוף המשחק",
+                category: "סרטים",
+                brand: "מארוול",
+                audience: "adults",
+                row: "מומלצים עבורך",
+                year: "2019",
+                rating: "12+",
+                genre: "אקשן / גיבורי על",
+                synopsis: "הנוקמים הנותרים מתאחדים לקרב האחרון והגורלי ביותר נגד תאנוס כדי להחזיר את הסדר והחיים ליקום.",
+                cast: "רוברט דאוני ג'וניור, כריס אוונס, סקרלט ג'והנסון",
+                bg: "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&w=1600&q=80",
+                poster: "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&w=600&q=80"
+            }
+        ];
+
+        // State variables
+        let currentHeroIndex = 0;
+        const heroMovies = [mediaData[0], mediaData[1], mediaData[2]];
+        let activeModalMovie = null;
+        let currentAudience = 'all'; // 'all', 'kids', 'adults'
+        let watchlist = JSON.parse(localStorage.getItem('disney_watchlist')) || [1, 3];
+        let reviewsData = JSON.parse(localStorage.getItem('disney_reviews')) || {
+            1: [
+                { author: "דניאל", rating: 5, text: "סרט מדהים! אנימציה משגעת ומוזיקה מרגשת.", date: "05/01/2026" },
+                { author: "מיכל", rating: 4, text: "נהניתי מכל רגע, מומלץ מאוד לכל המשפחה.", date: "02/01/2026" }
+            ],
+            3: [
+                { author: "תומר", rating: 5, text: "הסרט הכי מצחיק של מארוול בשנים האחרונות!", date: "10/02/2026" }
+            ]
+        };
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', () => {
+            initHero();
+            renderMovieRows();
+            renderCatalogGrids();
+            updateWatchlistUI();
+            lucide.createIcons();
+            
+            // Auto rotate hero banner
+            setInterval(() => {
+                nextHero();
+            }, 6000);
+        });
+
+        // Audience Filter Logic
+        function setAudience(mode) {
+            currentAudience = mode;
+            ['all', 'kids', 'adults'].forEach(m => {
+                const btn = document.getElementById(`audience-${m}`);
+                if (m === mode) {
+                    btn.classList.add('bg-cyan-500', 'text-black', 'font-bold');
+                    btn.classList.remove('text-gray-300');
+                } else {
+                    btn.classList.remove('bg-cyan-500', 'text-black', 'font-bold');
+                    btn.classList.add('text-gray-300');
+                }
+            });
+            renderMovieRows();
+            renderCatalogGrids();
+        }
+
+        function getFilteredMedia() {
+            if (currentAudience === 'kids') {
+                return mediaData.filter(m => m.audience === 'kids' || m.audience === 'all');
+            } else if (currentAudience === 'adults') {
+                return mediaData.filter(m => m.audience === 'adults' || m.audience === 'all');
+            }
+            return mediaData;
+        }
+
+        // Hero Carousel Functions
+        function initHero() {
+            updateHeroContent();
+        }
+
+        function updateHeroContent() {
+            const movie = heroMovies[currentHeroIndex];
+            document.getElementById('hero-bg').style.backgroundImage = `url('${movie.bg}')`;
+            document.getElementById('hero-title').textContent = movie.title;
+            document.getElementById('hero-desc').textContent = movie.synopsis;
+            
+            const isSaved = watchlist.includes(movie.id);
+            const btnText = document.querySelector('#hero-watchlist-btn span');
+            const btnIcon = document.querySelector('#hero-watchlist-btn i');
+            if (isSaved) {
+                btnText.textContent = 'ברשימה';
+                btnIcon.setAttribute('data-lucide', 'check');
+            } else {
+                btnText.textContent = 'הוסף לרשימה';
+                btnIcon.setAttribute('data-lucide', 'plus');
+            }
+            lucide.createIcons();
+        }
+
+        function nextHero() {
+            currentHeroIndex = (currentHeroIndex + 1) % heroMovies.length;
+            updateHeroContent();
+        }
+
+        function prevHero() {
+            currentHeroIndex = (currentHeroIndex - 1 + heroMovies.length) % heroMovies.length;
+            updateHeroContent();
+        }
+
+        function playCurrentHero() {
+            openPlayer(heroMovies[currentHeroIndex].title);
+        }
+
+        function toggleHeroWatchlist() {
+            const movie = heroMovies[currentHeroIndex];
+            toggleWatchlist(movie.id);
+            updateHeroContent();
+        }
+
+        // Render Movie Rows on Home View
+        function renderMovieRows() {
+            const container = document.getElementById('movie-rows-container');
+            container.innerHTML = '';
+
+            const currentFiltered = getFilteredMedia();
+            const rowNames = ["מומלצים עבורך", "טרנדי עכשיו", "קלאסיקות אהובות", "אנימציה ומד\"ב"];
+
+            rowNames.forEach(rowName => {
+                const moviesInRow = currentFiltered.filter(m => m.row === rowName);
+                if (moviesInRow.length === 0) return;
+
+                const rowEl = document.createElement('div');
+                rowEl.className = 'space-y-3';
+                rowEl.innerHTML = `
+                    <h3 class="text-xl font-bold text-gray-200 tracking-wide">${rowName}</h3>
+                    <div class="flex space-x-4 space-x-reverse overflow-x-auto no-scrollbar py-4 px-1">
+                        ${moviesInRow.map(movie => createMovieCardHTML(movie)).join('')}
+                    </div>
+                `;
+                container.appendChild(rowEl);
+            });
+            lucide.createIcons();
+        }
+
+        function createMovieCardHTML(movie) {
+            return `
+                <div onclick="openModal(${movie.id})" class="movie-card flex-shrink-0 w-52 md:w-64 bg-[#191b24] rounded-xl overflow-hidden cursor-pointer border border-gray-800/80 shadow-lg group">
+                    <div class="h-32 md:h-36 w-full bg-cover bg-center relative" style="background-image: url('${movie.poster}')">
+                        <div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors"></div>
+                    </div>
+                    <div class="p-3.5 space-y-1">
+                        <h4 class="font-bold text-sm text-white truncate">${movie.title}</h4>
+                        <div class="flex items-center justify-between text-xs text-gray-400">
+                            <span>${movie.year}</span>
+                            <span class="bg-gray-800 px-1.5 py-0.5 rounded">${movie.rating}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render Catalogs for Movies & Series tabs
+        function renderCatalogGrids() {
+            const moviesGrid = document.getElementById('all-movies-grid');
+            const seriesGrid = document.getElementById('all-series-grid');
+
+            const currentFiltered = getFilteredMedia();
+            const movies = currentFiltered.filter(m => m.category === 'סרטים');
+            const series = currentFiltered.filter(m => m.category === 'סדרות');
+
+            moviesGrid.innerHTML = movies.length ? movies.map(m => createMovieCardHTML(m)).join('') : `<p class="text-gray-400 col-span-full text-center py-8">אין סרטים תחת סינון זה.</p>`;
+            seriesGrid.innerHTML = series.length ? series.map(m => createMovieCardHTML(m)).join('') : `<p class="text-gray-400 col-span-full text-center py-8">אין סדרות תחת סינון זה.</p>`;
+            lucide.createIcons();
+        }
+
+        // Tab Navigation
+        function switchTab(tabId) {
+            ['home', 'movies', 'series', 'watchlist', 'search'].forEach(t => {
+                document.getElementById(`view-${t}`).classList.add('hidden');
+                const navBtn = document.getElementById(`nav-${t}`);
+                if (navBtn) {
+                    navBtn.classList.remove('text-white', 'border-b-2', 'border-white');
+                    navBtn.classList.add('text-gray-400');
+                }
+            });
+
+            document.getElementById(`view-${tabId}`).classList.remove('hidden');
+            const activeNav = document.getElementById(`nav-${tabId}`);
+            if (activeNav) {
+                activeNav.classList.remove('text-gray-400');
+                activeNav.classList.add('text-white', 'border-b-2', 'border-white');
+            }
+
+            if (tabId === 'watchlist') {
+                renderWatchlist();
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Brand Filtering
+        function filterByBrand(brandName) {
+            switchTab('search');
+            document.getElementById('search-results-title').textContent = `תוצאות עבור מותג: ${brandName}`;
+            const currentFiltered = getFilteredMedia();
+            const filtered = currentFiltered.filter(m => m.brand === brandName);
+            const grid = document.getElementById('search-results-grid');
+            
+            if (filtered.length === 0) {
+                grid.innerHTML = `<p class="text-gray-400 col-span-full text-center py-12">לא נמצאו פריטים עבור מותג זה בסינון הנוכחי.</p>`;
+            } else {
+                grid.innerHTML = filtered.map(m => createMovieCardHTML(m)).join('');
+            }
+            lucide.createIcons();
+        }
+
+        // Live Search Handling
+        function handleSearch(query) {
+            if (!query.trim()) {
+                if (document.getElementById('view-search').classList.contains('hidden') === false) {
+                    switchTab('home');
+                }
+                return;
+            }
+
+            switchTab('search');
+            document.getElementById('search-results-title').textContent = `תוצאות חיפוש: "${query}"`;
+            const q = query.toLowerCase();
+            const currentFiltered = getFilteredMedia();
+            const filtered = currentFiltered.filter(m => m.title.toLowerCase().includes(q) || m.genre.toLowerCase().includes(q) || m.brand.toLowerCase().includes(q));
+            
+            const grid = document.getElementById('search-results-grid');
+            if (filtered.length === 0) {
+                grid.innerHTML = `<p class="text-gray-400 col-span-full text-center py-12">לא נמצאו תוצאות התואמות את החיפוש.</p>`;
+            } else {
+                grid.innerHTML = filtered.map(m => createMovieCardHTML(m)).join('');
+            }
+            lucide.createIcons();
+        }
+
+        // Modal Handling & Reviews System
+        function openModal(movieId) {
+            activeModalMovie = mediaData.find(m => m.id === movieId);
+            if (!activeModalMovie) return;
+
+            document.getElementById('modal-bg').style.backgroundImage = `url('${activeModalMovie.bg}')`;
+            document.getElementById('modal-title').textContent = activeModalMovie.title;
+            document.getElementById('modal-year').textContent = activeModalMovie.year;
+            document.getElementById('modal-rating').textContent = activeModalMovie.rating;
+            document.getElementById('modal-genre').textContent = activeModalMovie.genre;
+            document.getElementById('modal-synopsis').textContent = activeModalMovie.synopsis;
+            document.getElementById('modal-cast').textContent = activeModalMovie.cast;
+
+            updateModalWatchlistState();
+            renderReviewsForActiveMovie();
+
+            const modal = document.getElementById('movie-modal');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            document.getElementById('modal-content').classList.remove('scale-95');
+            document.getElementById('modal-content').classList.add('scale-100');
+            lucide.createIcons();
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('movie-modal');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            document.getElementById('modal-content').classList.remove('scale-100');
+            document.getElementById('modal-content').classList.add('scale-95');
+        }
+
+        function renderReviewsForActiveMovie() {
+            if (!activeModalMovie) return;
+            const movieId = activeModalMovie.id;
+            const listEl = document.getElementById('modal-reviews-list');
+            const countEl = document.getElementById('reviews-count');
+            const scoreValEl = document.getElementById('modal-score-val');
+
+            const movieReviews = reviewsData[movieId] || [];
+            countEl.textContent = `${movieReviews.length} ביקורות`;
+
+            if (movieReviews.length > 0) {
+                const avg = (movieReviews.reduce((acc, r) => acc + Number(r.rating), 0) / movieReviews.length).toFixed(1);
+                scoreValEl.textContent = avg;
+            } else {
+                scoreValEl.textContent = "טרם דורג";
+            }
+
+            if (movieReviews.length === 0) {
+                listEl.innerHTML = `<p class="text-xs text-gray-500 text-center py-4">היה הראשונים לכתוב ביקורת על סרט זה!</p>`;
+                return;
+            }
+
+            listEl.innerHTML = movieReviews.map(r => `
+                <div class="bg-[#191b24] p-3 rounded-xl border border-gray-800 space-y-1">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="font-bold text-white">${escapeHTML(r.author)}</span>
+                        <div class="flex items-center text-amber-400">
+                            ${'⭐'.repeat(r.rating)}
+                            <span class="text-gray-500 mr-2">${r.date}</span>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-300 leading-relaxed">${escapeHTML(r.text)}</p>
+                </div>
+            `).join('');
+        }
+
+        function submitReview() {
+            if (!activeModalMovie) return;
+            const authorInput = document.getElementById('review-author');
+            const ratingInput = document.getElementById('review-rating');
+            const textInput = document.getElementById('review-text');
+
+            const author = authorInput.value.trim() || "אורח אנונימי";
+            const rating = parseInt(ratingInput.value);
+            const text = textInput.value.trim();
+
+            if (!text) {
+                return;
+            }
+
+            const movieId = activeModalMovie.id;
+            if (!reviewsData[movieId]) {
+                reviewsData[movieId] = [];
+            }
+
+            const newReview = {
+                author,
+                rating,
+                text,
+                date: new Date().toLocaleDateString('he-IL')
+            };
+
+            reviewsData[movieId].unshift(newReview);
+            localStorage.setItem('disney_reviews', JSON.stringify(reviewsData));
+
+            authorInput.value = '';
+            textInput.value = '';
+            renderReviewsForActiveMovie();
+        }
+
+        function shareOnWhatsApp() {
+            if (!activeModalMovie) return;
+            const text = encodeURIComponent(`היי! ממליץ לך לראות את "${activeModalMovie.title}" (${activeModalMovie.year}) בדיסני+. ז'אנר: ${activeModalMovie.genre}. שווה לצפות! 🍿✨`);
+            window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+
+        // Watchlist Management
+        function toggleWatchlist(movieId) {
+            const index = watchlist.indexOf(movieId);
+            if (index > -1) {
+                watchlist.splice(index, 1);
+            } else {
+                watchlist.push(movieId);
+            }
+            localStorage.setItem('disney_watchlist', JSON.stringify(watchlist));
+            updateWatchlistUI();
+            updateModalWatchlistState();
+        }
+
+        function toggleModalWatchlist() {
+            if (activeModalMovie) {
+                toggleWatchlist(activeModalMovie.id);
+            }
+        }
+
+        function updateModalWatchlistState() {
+            if (!activeModalMovie) return;
+            const isSaved = watchlist.includes(activeModalMovie.id);
+            const textEl = document.getElementById('modal-watchlist-text');
+            const iconEl = document.getElementById('modal-watchlist-icon');
+
+            if (isSaved) {
+                textEl.textContent = 'ברשימה שלך';
+                iconEl.setAttribute('data-lucide', 'check');
+            } else {
+                textEl.textContent = 'הוסף לרשימה';
+                iconEl.setAttribute('data-lucide', 'plus');
+            }
+            lucide.createIcons();
+        }
+
+        function updateWatchlistUI() {
+            document.getElementById('watchlist-count').textContent = watchlist.length;
+        }
+
+        function renderWatchlist() {
+            const grid = document.getElementById('watchlist-grid');
+            const emptyEl = document.getElementById('empty-watchlist');
+            const savedMovies = mediaData.filter(m => watchlist.includes(m.id));
+
+            if (savedMovies.length === 0) {
+                grid.innerHTML = '';
+                emptyEl.classList.remove('hidden');
+            } else {
+                emptyEl.classList.add('hidden');
+                grid.innerHTML = savedMovies.map(m => createMovieCardHTML(m)).join('');
+            }
+            lucide.createIcons();
+        }
+
+        // Video Player Simulator
+        function playModalMovie() {
+            if (activeModalMovie) {
+                closeModal();
+                openPlayer(activeModalMovie.title);
+            }
+        }
+
+        function openPlayer(title) {
+            document.getElementById('player-title').textContent = `מנגן כעת: ${title}`;
+            const player = document.getElementById('player-modal');
+            player.classList.remove('opacity-0', 'pointer-events-none');
+            lucide.createIcons();
+        }
+
+        function closePlayer() {
+            const player = document.getElementById('player-modal');
+            player.classList.add('opacity-0', 'pointer-events-none');
+        }
+    </script>
+</body>
+</html>

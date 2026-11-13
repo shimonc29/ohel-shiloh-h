@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OmniAI - עוזר AI מתקדם</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Assistant', sans-serif;
+            background-color: #0b0f19;
+            color: #f1f5f9;
+        }
+        .typing-dot {
+            animation: blink 1.4s infinite both;
+        }
+        .typing-dot:nth-child(2) { animation-delay: .2s; }
+        .typing-dot:nth-child(3) { animation-delay: .4s; }
+        @keyframes blink {
+            0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+            40% { opacity: 1; transform: scale(1.2); }
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        pre code {
+            font-family: monospace;
+            direction: ltr;
+            text-align: left;
+        }
+    </style>
+</head>
+<body class="h-screen flex overflow-hidden">
+
+    <!-- סרגל צד (Sidebar) -->
+    <aside id="sidebar" class="w-64 bg-slate-900 border-l border-slate-800 flex flex-col justify-between transition-all duration-300 z-20">
+        <div>
+            <!-- כותרת ראשית וכפתור שיחה חדשה -->
+            <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center font-bold text-white shadow-lg">
+                        Ω
+                    </div>
+                    <span class="font-bold text-lg text-white">OmniAI</span>
+                </div>
+                <button onclick="createNewChat()" class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition" title="שיחה חדשה">
+                    ✏️
+                </button>
+            </div>
+
+            <!-- תפריט בחירת מודלים -->
+            <div class="p-3">
+                <label class="text-xs font-semibold text-slate-400 mb-1 block">מודל AI פעיל:</label>
+                <select id="modelSelector" class="w-full bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg p-2 focus:ring-2 focus:ring-purple-500 outline-none">
+                    <option value="gemini-1.5-flash">Gemini 1.5 Flash (מהיר מאוד)</option>
+                    <option value="gemini-1.5-pro">Gemini 1.5 Pro (חשיבה עמוקה)</option>
+                    <option value="gpt-4o">ChatGPT-4o (מצב סימולציה)</option>
+                    <option value="claude-3-5">Claude 3.5 Sonnet (מצב סימולציה)</option>
+                </select>
+            </div>
+
+            <!-- היסטוריית שיחות -->
+            <div class="px-3 py-2">
+                <span class="text-xs font-semibold text-slate-500 px-2">שיחות אחרונות</span>
+                <div id="chatHistoryList" class="mt-2 flex flex-col gap-1 max-h-[calc(100vh-280px)] overflow-y-auto custom-scrollbar">
+                    <!-- יתווספו דינמית -->
+                </div>
+            </div>
+        </div>
+
+        <div class="p-4 border-t border-slate-800 text-xs text-slate-500 text-center">
+            OmniAI Platform v2.5
+        </div>
+    </aside>
+
+    <!-- אזור ראשי -->
+    <main class="flex-1 flex flex-col h-full bg-slate-950 relative">
+        
+        <!-- סרגל עליון -->
+        <header class="h-14 border-b border-slate-800 flex items-center justify-between px-6 bg-slate-900/50 backdrop-blur">
+            <h1 id="currentChatTitle" class="font-semibold text-slate-200 text-sm">שיחה חדשה</h1>
+            <div class="flex items-center gap-3">
+                <span class="inline-flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-950/50 border border-emerald-800/50 px-2.5 py-1 rounded-full">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    מערכת פעילה
+                </span>
+            </div>
+        </header>
+
+        <!-- חלון ההודעות -->
+        <div id="chatContainer" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 custom-scrollbar">
+            <!-- מסך פתיחה -->
+            <div id="welcomeScreen" class="h-full flex flex-col items-center justify-center text-center p-6">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white text-2xl font-bold mb-4 shadow-xl">
+                    Ω
+                </div>
+                <h2 class="text-2xl font-bold text-white mb-2">איך אוכל לעזור לך היום?</h2>
+                <p class="text-slate-400 max-w-md text-sm mb-8 leading-relaxed">
+                    OmniAI משלב יכולות מענה, כתיבת קוד, יצירת תמונות וניתוח נתונים בזמן אמת.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-lg w-full text-right">
+                    <button onclick="quickPrompt('צור לי קוד HTML ו-CSS של כרטיס מוצר מודרני')" class="p-3 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl text-xs text-slate-300 transition text-right">
+                        💻 <strong>כתיבת קוד:</strong> כרטיס מוצר מודרני ב-HTML
+                    </button>
+                    <button onclick="quickPrompt('תסביר לי בצורה פשוטה איך עובדת בינה מלאכותית')" class="p-3 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl text-xs text-slate-300 transition text-right">
+                        💡 <strong>הסבר מושגים:</strong> איך עובדת בינה מלאכותית?
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- תיבת הקלדה בתחתית -->
+        <div class="p-4 border-t border-slate-800 bg-slate-900/40 backdrop-blur">
+            <form onsubmit="handleSend(event)" class="max-w-4xl mx-auto relative flex items-center">
+                <textarea 
+                    id="userInput" 
+                    rows="1"
+                    placeholder="שאל אותי כל דבר..."
+                    onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); handleSend(event); }"
+                    class="w-full bg-slate-900 border border-slate-700/80 rounded-2xl py-3.5 pr-4 pl-14 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-purple-500 resize-none overflow-hidden max-h-32 transition"
+                ></textarea>
+                
+                <button 
+                    type="submit" 
+                    class="absolute left-2.5 p-2 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-xl transition shadow-md flex items-center justify-center"
+                >
+                    ➔
+                </button>
+            </form>
+        </div>
+    </main>
+
+<script>
+    let chats = [{ id: '1', title: 'שיחה חדשה', messages: [] }];
+    let currentChatId = '1';
+    let isGenerating = false;
+
+    const chatContainer = document.getElementById('chatContainer');
+    const welcomeScreen = document.getElementById('welcomeScreen');
+    const userInput = document.getElementById('userInput');
+    const chatHistoryList = document.getElementById('chatHistoryList');
+    const currentChatTitle = document.getElementById('currentChatTitle');
+    const modelSelector = document.getElementById('modelSelector');
+
+    function createNewChat() {
+        const newId = Date.now().toString();
+        chats.unshift({ id: newId, title: 'שיחה חדשה', messages: [] });
+        currentChatId = newId;
+        renderHistory();
+        renderMessages();
+    }
+
+    function selectChat(id) {
+        currentChatId = id;
+        renderHistory();
+        renderMessages();
+    }
+
+    function renderHistory() {
+        chatHistoryList.innerHTML = '';
+        chats.forEach(c => {
+            const btn = document.createElement('button');
+            btn.className = `w-full text-right p-2.5 rounded-lg text-xs truncate transition flex items-center justify-between ${c.id === currentChatId ? 'bg-purple-900/40 text-purple-200 border border-purple-700/50' : 'text-slate-400 hover:bg-slate-800'}`;
+            btn.innerHTML = `<span>💬 ${c.title}</span>`;
+            btn.onclick = () => selectChat(c.id);
+            chatHistoryList.appendChild(btn);
+        });
+        
+        const active = chats.find(c => c.id === currentChatId);
+        if (active) currentChatTitle.innerText = active.title;
+    }
+
+    function renderMessages() {
+        const currentChat = chats.find(c => c.id === currentChatId);
+        if (!currentChat || currentChat.messages.length === 0) {
+            chatContainer.innerHTML = '';
+            chatContainer.appendChild(welcomeScreen);
+            welcomeScreen.classList.remove('hidden');
+            return;
+        }
+
+        welcomeScreen.classList.add('hidden');
+        chatContainer.innerHTML = '';
+
+        currentChat.messages.forEach(msg => {
+            const isUser = msg.role === 'user';
+            const wrapper = document.createElement('div');
+            wrapper.className = `flex gap-3 max-w-3xl ${isUser ? 'mr-auto flex-row-reverse' : 'ml-auto'}`;
+
+            const avatar = isUser ? 
+                `<div class="w-8 h-8 rounded-xl bg-slate-700 flex items-center justify-center text-white text-xs font-bold shrink-0">את/ה</div>` :
+                `<div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-md">Ω</div>`;
+
+            const parsedContent = formatMarkdown(msg.content);
+
+            wrapper.innerHTML = `
+                ${avatar}
+                <div class="flex flex-col gap-1 max-w-[85%]">
+                    <div class="p-4 rounded-2xl text-sm leading-relaxed ${isUser ? 'bg-purple-600 text-white rounded-tl-none' : 'bg-slate-900 border border-slate-800 text-slate-100 rounded-tr-none shadow-lg'}">
+                        ${parsedContent}
+                    </div>
+                    <span class="text-[10px] text-slate-500 px-1 ${isUser ? 'text-left' : 'text-right'}">${msg.time}</span>
+                </div>
+            `;
+            chatContainer.appendChild(wrapper);
+        });
+
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    function quickPrompt(text) {
+        userInput.value = text;
+        handleSend();
+    }
+
+    async function handleSend(e) {
+        if (e) e.preventDefault();
+        const text = userInput.value.trim();
+        if (!text || isGenerating) return;
+
+        const currentChat = chats.find(c => c.id === currentChatId);
+        if (!currentChat) return;
+
+        if (currentChat.messages.length === 0) {
+            currentChat.title = text.slice(0, 20) + (text.length > 20 ? '...' : '');
+            renderHistory();
+        }
+
+        const time = new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+        currentChat.messages.push({ role: 'user', content: text, time });
+        
+        userInput.value = '';
+        renderMessages();
+
+        showTypingIndicator();
+        isGenerating = true;
+
+        try {
+            const responseText = await fetchAIResponse(currentChat.messages);
+            currentChat.messages.push({
+                role: 'assistant',
+                content: responseText,
+                time: new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
+            });
+        } catch (err) {
+            currentChat.messages.push({
+                role: 'assistant',
+                content: "מתנצל, אירעה שגיאה בחיבור לשרת. אנא נסה שנית.",
+                time: new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
+            });
+        } finally {
+            removeTypingIndicator();
+            isGenerating = false;
+            renderMessages();
+        }
+    }
+
+    async function fetchAIResponse(messages) {
+        // במידה ופועל בסביבת ה-API המובנית
+        if (typeof window.callGeminiAPI === 'function') {
+            return await window.callGeminiAPI(messages);
+        }
+
+        // סימולציית מענה מתקדם במידה ואין חיבור API ישיר
+        await new Promise(r => setTimeout(r, 1000));
+        const lastMsg = messages[messages.length - 1].content;
+
+        if (lastMsg.includes('קוד') || lastMsg.includes('HTML') || lastMsg.includes('CSS')) {
+            return `הנה קוד מותאם לבקשתך:\n\n\`\`\`html\n<div class="card">\n  <h2>כותרת</h2>\n  <p>תוכן הכרטיס המעוצב</p>\n</div>\n\`\`\`\nתוכל להשתמש בקוד זה באופן מיידי!`;
+        }
+
+        return `תודה על השאלה: "${lastMsg}". אני OmniAI ואני כאן לעזור לך בכל נושא: תכנון, כתיבה, תכנות ופתרון בעיות!`;
+    }
+
+    function showTypingIndicator() {
+        const typingHTML = `
+            <div id="typingIndicator" class="flex gap-3 items-start ml-auto max-w-3xl">
+                <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold shrink-0">Ω</div>
+                <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl rounded-tr-none flex items-center gap-1.5 shadow-lg">
+                    <span class="w-2 h-2 rounded-full bg-purple-400 typing-dot"></span>
+                    <span class="w-2 h-2 rounded-full bg-purple-400 typing-dot"></span>
+                    <span class="w-2 h-2 rounded-full bg-purple-400 typing-dot"></span>
+                </div>
+            </div>
+        `;
+        chatContainer.insertAdjacentHTML('beforeend', typingHTML);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    function removeTypingIndicator() {
+        const el = document.getElementById('typingIndicator');
+        if (el) el.remove();
+    }
+
+    function copyCode(btn) {
+        const codeBlock = btn.parentElement.nextElementSibling;
+        const text = codeBlock.innerText;
+        
+        const area = document.createElement('textarea');
+        area.value = text;
+        document.body.appendChild(area);
+        area.select();
+        document.execCommand('copy');
+        document.body.removeChild(area);
+
+        btn.innerText = '✅ הועתק!';
+        setTimeout(() => btn.innerText = '📋 העתק קוד', 2000);
+    }
+
+    function formatMarkdown(text) {
+        // המרת בלוקי קוד
+        let formatted = text.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+            return `
+                <div class="my-3 rounded-xl overflow-hidden border border-slate-700 bg-slate-950 dir-ltr text-left">
+                    <div class="bg-slate-800/80 px-4 py-1.5 flex justify-between items-center border-b border-slate-700/60">
+                        <span class="text-xs text-slate-400 font-mono">${lang || 'code'}</span>
+                        <button onclick="copyCode(this)" class="text-xs text-purple-300 hover:text-white transition">📋 העתק קוד</button>
+                    </div>
+                    <pre class="p-4 text-xs text-emerald-400 font-mono overflow-x-auto"><code>${escapeHtml(code.trim())}</code></pre>
+                </div>
+            `;
+        });
+
+        // הדגשות וכותרות
+        formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        formatted = formatted.replace(/\n/g, '<br>');
+        return formatted;
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    renderHistory();
+    renderMessages();
+</script>
+</body>
+</html>

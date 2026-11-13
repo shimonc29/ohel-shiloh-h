@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GuitarFlow - גיטרה בקצב</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Heebo', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Heebo', sans-serif; background-color: #f8fafc; }
+        .chord-diagram { font-family: monospace; line-height: 1.2; }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+            100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .recording-active { animation: pulse-ring 2s infinite; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // --- Audio Context Setup for Chords ---
+        let audioCtx = null;
+        
+        const initAudio = () => {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        };
+
+        const playChord = (frequencies) => {
+            initAudio();
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            
+            const now = audioCtx.currentTime;
+            const duration = 2.5; // זמן דעיכה ארוך יותר לצליל טבעי
+            
+            frequencies.forEach((freq, i) => {
+                if (freq <= 0) return;
+                
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = 'triangle';
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.frequency.value = freq;
+                
+                // אפקט של פריטה (Strumming) - כל מיתר מנוגן בהפרש קטן
+                const startTime = now + (i * 0.05);
+                
+                // שליטה על הווליום והדעיכה (מעטפת הצליל)
+                gain.gain.setValueAtTime(0, startTime);
+                gain.gain.linearRampToValueAtTime(0.4, startTime + 0.05); // ווליום חזק יותר מבעבר
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+                
+                osc.start(startTime);
+                osc.stop(startTime + duration);
+            });
+        };
+
+        // Chords Data
+        const chordsData = {
+            'C': {
+                name: 'C',
+                hebrewName: "דו מז'ור",
+                freqs: [0, 130.81, 164.81, 196.00, 261.63, 329.63],
+                strings: [-1, 3, 2, 0, 1, 0], 
+                fingers: ['', '3', '2', '', '1', '']
+            },
+            'Am': {
+                name: 'Am',
+                hebrewName: 'לה מינור',
+                freqs: [0, 110.00, 164.81, 220.00, 261.63, 329.63],
+                strings: [-1, 0, 2, 2, 1, 0], 
+                fingers: ['', '', '2', '3', '1', '']
+            },
+            'Em': {
+                name: 'Em',
+                hebrewName: 'מי מינור',
+                freqs: [82.41, 123.47, 164.81, 196.00, 246.94, 329.63],
+                strings: [0, 2, 2, 0, 0, 0],
+                fingers: ['', '2', '3', '', '', '']
+            },
+            'E': {
+                name: 'E',
+                hebrewName: "מי מז'ור",
+                freqs: [82.41, 123.47, 164.81, 207.65, 246.94, 329.63],
+                strings: [0, 2, 2, 1, 0, 0],
+                fingers: ['', '2', '3', '1', '', '']
+            },
+            'G': {
+                name: 'G',
+                hebrewName: "סול מז'ור",
+                freqs: [98.00, 123.47, 146.83, 196.00, 246.94, 392.00],
+                strings: [3, 2, 0, 0, 0, 3],
+                fingers: ['2', '1', '', '', '', '3']
+            },
+            'F': {
+                name: 'F',
+                hebrewName: "פה מז'ור",
+                freqs: [0, 0, 146.83, 174.61, 220.00, 349.23],
+                strings: [-1, -1, 3, 2, 1, 1],
+                fingers: ['', '', '3', '2', '1', '1']
+            },
+            'A': {
+                name: 'A',
+                hebrewName: "לה מז'ור",
+                freqs: [0, 110.00, 164.81, 220.00, 277.18, 329.63],
+                strings: [-1, 0, 2, 2, 2, 0],
+                fingers: ['', '', '1', '2', '3', '']
+            },
+            'Dm': {
+                name: 'Dm',
+                hebrewName: 'רה מינור',
+                freqs: [0, 0, 146.83, 220.00, 293.66, 349.23],
+                strings: [-1, -1, 0, 2, 3, 1],
+                fingers: ['', '', '', '2', '3', '1']
+            },
+            'D': {
+                name: 'D',
+                hebrewName: "רה מז'ור",
+                freqs: [0, 0, 146.83, 220.00, 293.66, 369.99],
+                strings: [-1, -1, 0, 2, 3, 2],
+                fingers: ['', '', '', '1', '3', '2']
+            },
+            'Bm': {
+                name: 'Bm',
+                hebrewName: 'סי מינור',
+                freqs: [0, 123.47, 185.00, 246.94, 293.66, 369.99],
+                strings: [-1, 2, 4, 4, 3, 2],
+                fingers: ['', '1', '3', '4', '2', '1']
+            },
+            'A7': {
+                name: 'A7',
+                hebrewName: 'לה 7',
+                freqs: [0, 110.00, 164.81, 196.00, 277.18, 329.63],
+                strings: [-1, 0, 2, 0, 2, 0],
+                fingers: ['', '', '2', '', '3', '']
+            },
+            'B7': {
+                name: 'B7',
+                hebrewName: 'סי 7',
+                freqs: [0, 123.47, 164.81, 220.00, 246.94, 369.99],
+                strings: [-1, 2, 1, 2, 0, 2],
+                fingers: ['', '2', '1', '3', '', '4']
+            }
+        };
+
+        const hebrewSongsList = [
+            {
+                id: 'oof-gozal-full',
+                title: "עוף גוזל - שיר מלא",
+                artist: "אריק איינשטיין",
+                level: "מתחילים",
+                capo: "ללא קאפו",
+                chords: ["Am", "Em", "C", "G", "Dm"],
+                strum: "↓   ↓ ↑   ↑ ↓",
+                content: [
+                    { type: 'verse', title: 'בית 1', lines: [
+                        { chord: 'Am', text: 'הגוזלים שלי עזבו את הקן' },
+                        { chord: 'Em', text: 'פרשו כנפיים ועפו' },
+                        { chord: 'Am', text: 'ואני נשארתי לבד בחצר' },
+                        { chord: 'Em', text: 'מביט למעלה ומתפלל' }
+                    ]},
+                    { type: 'chorus', title: 'פזמון', lines: [
+                        { chord: 'C', text: 'עוף גוזל, חתוך את השמיים' },
+                        { chord: 'G', text: 'טוס לאן שבא לך' },
+                        { chord: 'Am', text: 'רק אל תשכח, יש נשר בשמיים' },
+                        { chord: 'Em', text: 'גור לך...' }
+                    ]},
+                    { type: 'verse', title: 'בית 2', lines: [
+                        { chord: 'Am', text: 'עכשיו אנחנו נשארנו לבד' },
+                        { chord: 'Em', text: 'אבל אני יודע שכך זה צריך להיות' },
+                        { chord: 'Am', text: 'אני יודע שזה טבעי וזה טוב' },
+                        { chord: 'Em', text: 'אבל קשה לי קצת לעזוב' }
+                    ]},
+                    { type: 'chorus', title: 'פזמון', lines: [
+                        { chord: 'C', text: 'עוף גוזל, חתוך את השמיים' },
+                        { chord: 'G', text: 'טוס לאן שבא לך' },
+                        { chord: 'Am', text: 'רק אל תשכח, יש נשר בשמיים' },
+                        { chord: 'Em', text: 'גור לך...' }
+                    ]}
+                ]
+            },
+            {
+                id: 'badad',
+                title: "בדד",
+                artist: "זוהר ארגוב",
+                level: "בינוני",
+                capo: "סריג 2",
+                chords: ["Am", "Dm", "E", "G"],
+                strum: "↓   ↓ ↑ ↓ ↑",
+                content: [
+                    { type: 'verse', title: 'בית 1', lines: [
+                        { chord: 'Am', text: 'בדד אלך גם תפילה אין לי' },
+                        { chord: 'Dm', text: 'בדד בלי עתיד בלי תקווה בלי חלום' },
+                        { chord: 'Am', text: 'בדד כאור בחושך אלך' },
+                        { chord: 'E', text: 'אל עולם שכולו דממה' }
+                    ]}
+                ]
+            },
+            {
+                id: 'matanot-ktanot',
+                title: "מתנות קטנות",
+                artist: "רמי קליינשטיין",
+                level: "מתחילים",
+                capo: "ללא קאפו",
+                chords: ["G", "Em", "C", "D"],
+                strum: "↓ ↓ ↑ ↑ ↓ ↑",
+                content: [
+                    { type: 'verse', title: 'בית 1', lines: [
+                        { chord: 'G', text: 'זה עוד יום שישי' },
+                        { chord: 'Em', text: 'נושב לוחש על החלון' },
+                        { chord: 'C', text: 'מתנות קטנות' },
+                        { chord: 'D', text: 'מישהו שלח לי בחלום' }
+                    ]}
+                ]
+            }
+        ];
+
+        // --- Icons Component ---
+        const Icons = {
+            Search: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            ),
+            Play: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            ),
+            Close: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            ),
+            Mic: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                </svg>
+            ),
+            Heart: ({ filled }) => (
+                <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${filled ? 'fill-red-500 stroke-red-500' : 'fill-none stroke-currentColor'}`} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+            ),
+            Star: ({ filled }) => (
+                <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 cursor-pointer ${filled ? 'text-amber-400 fill-amber-400' : 'text-gray-300'}`} viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                </svg>
+            ),
+            Share: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+            ),
+            Comment: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                </svg>
+            )
+        };
+
+        // --- Classic Guitar Chord Diagram Box Component ---
+        const ClassicChordDiagram = ({ chordKey }) => {
+            const chord = chordsData[chordKey] || chordsData['Am'];
+            const frets = [1, 2, 3, 4];
+
+            return (
+                <div className="bg-white p-6 rounded-2xl shadow-xl border border-gray-200 w-72 mx-auto select-none" dir="ltr">
+                    <div className="text-center mb-3">
+                        <h3 className="text-3xl font-extrabold text-gray-900 tracking-tight">{chord.name}</h3>
+                        <p className="text-sm font-medium text-gray-500" dir="rtl">{chord.hebrewName}</p>
+                    </div>
+
+                    <div className="grid grid-cols-6 gap-0 px-6 text-center font-bold text-sm text-gray-700 h-6 items-end">
+                        {chord.strings.map((fretVal, strIdx) => (
+                            <div key={strIdx} className="w-full">
+                                {fretVal === -1 && <span className="text-gray-800 text-lg">✕</span>}
+                                {fretVal === 0 && <span className="text-gray-800 text-base">○</span>}
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="relative px-6 py-1">
+                        <div className="h-2 bg-gray-900 rounded-t-sm w-full"></div>
+                        <div className="relative border-x-2 border-gray-900 bg-white">
+                            {frets.map((fretNum) => (
+                                <div key={fretNum} className="h-11 border-b-2 border-gray-400 relative">
+                                    <span className="absolute -left-5 top-1/2 -translate-y-1/2 text-xs italic font-serif text-gray-400">
+                                        {fretNum}
+                                    </span>
+                                </div>
+                            ))}
+
+                            <div className="absolute inset-0 grid grid-cols-6 h-full">
+                                {chord.strings.map((fretVal, strIdx) => {
+                                    const finger = chord.fingers[strIdx];
+                                    return (
+                                        <div key={strIdx} className="relative flex justify-center items-center h-full">
+                                            <div className="w-[1.5px] bg-gray-800 h-full"></div>
+                                            {fretVal > 0 && (
+                                                <div 
+                                                    className="absolute w-7 h-7 rounded-full bg-gray-900 text-white font-bold text-sm flex items-center justify-center shadow-md transform -translate-y-1/2 z-10 border border-black"
+                                                    style={{ top: `${(fretVal - 0.5) * 25}%` }}
+                                                >
+                                                    {finger}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-6 gap-0 text-center font-serif text-xs text-gray-700 mt-2">
+                            <span>6</span>
+                            <span>5</span>
+                            <span>4</span>
+                            <span>3</span>
+                            <span>2</span>
+                            <span>1</span>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- Interactive Fretboard Modal ---
+        const InteractiveFretboard = ({ chordKey, onClose }) => {
+            const chord = chordsData[chordKey] || chordsData['Am'];
+
+            return (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl border border-gray-100 relative animate-fade-in">
+                        <button onClick={onClose} className="absolute top-4 left-4 p-2 rounded-full hover:bg-gray-100 text-gray-500 transition-colors">
+                            <Icons.Close />
+                        </button>
+
+                        <ClassicChordDiagram chordKey={chordKey} />
+
+                        <div className="flex gap-3 mt-6">
+                            <button 
+                                onClick={() => playChord(chord.freqs)} 
+                                className="flex-1 bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
+                            >
+                                <Icons.Play />
+                                השמע אקורד
+                            </button>
+                            <button 
+                                onClick={onClose} 
+                                className="px-5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-colors"
+                            >
+                                סגור
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const InteractionBar = () => {
+            const [liked, setLiked] = useState(false);
+            const [rating, setRating] = useState(0);
+            const [comments, setComments] = useState([]);
+            const [newComment, setNewComment] = useState("");
+            const [showComments, setShowComments] = useState(false);
+
+            const handleShare = () => {
+                const shareText = encodeURIComponent("אני לומד לנגן בגיטרה ב-GuitarFlow! בוא ללמוד ולנגן איתי: ");
+                const currentUrl = encodeURIComponent(window.location.href);
+                window.open(`https://api.whatsapp.com/send?text=${shareText}${currentUrl}`, '_blank');
+            };
+
+            const addComment = () => {
+                if(newComment.trim() !== "") {
+                    setComments([...comments, {id: Date.now(), text: newComment, author: "משתמש/ת"}]);
+                    setNewComment("");
+                }
+            };
+
+            return (
+                <div className="mt-12 border-t pt-6">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-500 font-medium">דרג שיעור:</span>
+                            <div className="flex">
+                                {[1, 2, 3, 4, 5].map(star => (
+                                    <div key={star} onClick={() => setRating(star)}>
+                                        <Icons.Star filled={star <= rating} />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                            <button onClick={() => setLiked(!liked)} className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all ${liked ? 'bg-red-50 border-red-200 text-red-500' : 'hover:bg-gray-100 text-gray-600 border-gray-200'}`}>
+                                <Icons.Heart filled={liked} />
+                                <span className="text-sm font-medium">{liked ? 'נשמר במועדפים' : 'שמור'}</span>
+                            </button>
+                            <button onClick={handleShare} className="flex items-center gap-2 px-4 py-2 rounded-full border border-green-200 bg-green-50 hover:bg-green-100 text-green-700 transition-all">
+                                <Icons.Share />
+                                <span className="text-sm font-medium">שתף בוואצאפ</span>
+                            </button>
+                            <button onClick={() => setShowComments(!showComments)} className="flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 hover:bg-gray-100 text-gray-600 transition-all">
+                                <Icons.Comment />
+                                <span className="text-sm font-medium">תגובות ({comments.length})</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {showComments && (
+                        <div className="mt-6 bg-gray-50 p-6 rounded-2xl border border-gray-100">
+                            <h4 className="font-bold text-gray-800 mb-4 text-right">תגובות הקהילה</h4>
+                            <div className="flex gap-2 mb-4">
+                                <input 
+                                    type="text" 
+                                    value={newComment}
+                                    onChange={(e) => setNewComment(e.target.value)}
+                                    placeholder="הוסף תגובה או שאלה..."
+                                    className="flex-1 px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-right"
+                                />
+                                <button onClick={addComment} className="bg-brand-600 hover:bg-brand-700 text-white px-5 py-2 rounded-xl font-bold transition-all">
+                                    שלח
+                                </button>
+                            </div>
+                            <div className="space-y-3">
+                                {comments.length === 0 ? (
+                                    <p className="text-gray-400 text-sm text-center py-2">אין תגובות עדיין. הייו הראשונים להגיב!</p>
+                                ) : (
+                                    comments.map(c => (
+                                        <div key={c.id} className="bg-white p-3 rounded-xl border border-gray-100 text-right">
+                                            <span className="font-bold text-xs text-brand-600 block mb-1">{c.author}</span>
+                                            <p className="text-gray-700 text-sm">{c.text}</p>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const BeginnerLessonView = ({ onOpenChord }) => {
+            const [recording, setRecording] = useState(false);
+            const [feedback, setFeedback] = useState(null);
+
+            const toggleRecording = () => {
+                if(!recording) {
+                    setRecording(true);
+                    setFeedback(null);
+                    setTimeout(() => {
+                        setRecording(false);
+                        setFeedback({
+                            score: "מצוין! 88%",
+                            notes: "קצב מעולה! שים לב להעברה נקייה יותר בין Am ל-Em. שמור על אגודל יציב בגב הצוואר."
+                        });
+                    }, 4000);
+                } else {
+                    setRecording(false);
+                }
+            };
+
+            return (
+                <div className="space-y-8 animate-fade-in">
+                    {/* Header Banner */}
+                    <div className="bg-gradient-to-r from-brand-600 to-indigo-700 text-white p-8 rounded-3xl shadow-lg relative overflow-hidden">
+                        <span className="bg-white/20 backdrop-blur-md text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-2 inline-block">
+                            שיעור ראשון למתחילים
+                        </span>
+                        <h2 className="text-3xl font-extrabold mb-2">אקורדים ראשונים: Am ו-Em</h2>
+                        <p className="text-brand-100 max-w-xl">נלמד 2 אקורדים בסיסיים, נתאמן על פריטה קלה, וננגן את השיר הראשון שלנו בעברית!</p>
+                    </div>
+
+                    {/* Section 1: Learn Chords */}
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                        <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <span className="w-7 h-7 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-sm font-bold">1</span>
+                            למידת האקורדים
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {['Am', 'Em'].map(chordKey => (
+                                <div key={chordKey} className="border border-gray-100 bg-gray-50/50 p-5 rounded-2xl hover:border-brand-300 transition-all">
+                                    <div className="flex justify-between items-center mb-3">
+                                        <div>
+                                            <h4 className="text-2xl font-black text-gray-800">{chordsData[chordKey].name}</h4>
+                                            <p className="text-xs text-gray-500">{chordsData[chordKey].hebrewName}</p>
+                                        </div>
+                                        <button onClick={() => playChord(chordsData[chordKey].freqs)} className="p-3 bg-brand-100 hover:bg-brand-200 text-brand-700 rounded-full transition-all">
+                                            <Icons.Play />
+                                        </button>
+                                    </div>
+                                    <button onClick={() => onOpenChord(chordKey)} className="w-full mt-2 bg-white border border-gray-200 hover:border-brand-500 text-brand-600 py-2 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2">
+                                        פתח דיאגרמת אקורד מלאה
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Section 2: Song Practice */}
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                        <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <span className="w-7 h-7 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-sm font-bold">2</span>
+                            שיר האימון: עוף גוזל (גרסת מתחילים)
+                        </h3>
+                        <div className="bg-slate-900 text-white p-6 rounded-2xl font-mono space-y-4">
+                            <div className="flex justify-between items-center text-xs text-slate-400 border-b border-slate-800 pb-3">
+                                <span>פריטה מומלצת: ↓   ↓ ↑   ↑ ↓</span>
+                                <span>קצב: 70 BPM</span>
+                            </div>
+                            <div className="space-y-4 text-right dir-rtl font-sans">
+                                <div>
+                                    <div className="text-brand-400 font-bold tracking-widest font-mono">Am &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Em</div>
+                                    <div className="text-lg">הגוזלים שלי עזבו את הקן</div>
+                                </div>
+                                <div>
+                                    <div className="text-brand-400 font-bold tracking-widest font-mono">Am &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Em</div>
+                                    <div className="text-lg">פרשו כנפיים ועפו...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Section 3: Live Feedback */}
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center">
+                        <h3 className="text-xl font-bold text-gray-800 mb-2">אימון ומשוב בלייב</h3>
+                        <p className="text-gray-500 text-sm mb-6">לחץ על המיקרופון, נגן 4 תיבות מהשיר וקבל ניתוח מידי של הנגינה והקצב שלך!</p>
+                        
+                        <button 
+                            onClick={toggleRecording} 
+                            className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto transition-all ${recording ? 'bg-red-500 text-white recording-active' : 'bg-brand-600 hover:bg-brand-700 text-white shadow-lg hover:scale-105'}`}
+                        >
+                            <Icons.Mic />
+                        </button>
+                        <p className="mt-3 text-xs font-bold text-gray-400">
+                            {recording ? "מקליט ומנתח נגינה..." : "לחץ להקלטה"}
+                        </p>
+
+                        {feedback && (
+                            <div className="mt-6 bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-2xl text-right animate-fade-in">
+                                <div className="font-bold text-lg mb-1">{feedback.score}</div>
+                                <p className="text-sm">{feedback.notes}</p>
+                            </div>
+                        )}
+                    </div>
+
+                    <InteractionBar />
+                </div>
+            );
+        };
+
+        const SongLibraryView = ({ onSelectSong, searchQuery }) => {
+            const filteredSongs = hebrewSongsList.filter(song => 
+                song.title.includes(searchQuery) || song.artist.includes(searchQuery)
+            );
+
+            return (
+                <div className="space-y-6 animate-fade-in">
+                    <h2 className="text-2xl font-bold text-gray-800">ספריית שירים בעברית</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredSongs.map(song => (
+                            <div key={song.id} className="bg-white p-6 rounded-2xl border border-gray-100 hover:shadow-lg transition-all flex flex-col justify-between">
+                                <div>
+                                    <div className="flex justify-between items-start mb-2">
+                                        <h3 className="text-xl font-bold text-gray-900">{song.title}</h3>
+                                        <span className="bg-brand-50 text-brand-700 text-xs px-2.5 py-1 rounded-full font-bold">{song.level}</span>
+                                    </div>
+                                    <p className="text-gray-500 text-sm mb-4">{song.artist}</p>
+                                    <div className="flex flex-wrap gap-1 mb-4">
+                                        {song.chords.map(c => (
+                                            <span key={c} className="bg-gray-100 text-gray-700 text-xs px-2 py-0.5 rounded font-mono font-bold">{c}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                                <button onClick={() => onSelectSong(song)} className="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-2.5 rounded-xl transition-colors">
+                                    פתח שיר
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        const SongDetailView = ({ song, onOpenChord }) => {
+            return (
+                <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 space-y-8 animate-fade-in">
+                    <div className="border-b pb-6">
+                        <h2 className="text-3xl font-extrabold text-gray-900 mb-1">{song.title}</h2>
+                        <p className="text-lg text-gray-500">{song.artist}</p>
+                        <div className="flex flex-wrap gap-4 mt-4 text-sm text-gray-600">
+                            <span className="bg-gray-100 px-3 py-1 rounded-lg">קאפו: <strong>{song.capo}</strong></span>
+                            <span className="bg-gray-100 px-3 py-1 rounded-lg">פריטה: <strong>{song.strum}</strong></span>
+                        </div>
+                    </div>
+
+                    {/* Chord Bar */}
+                    <div>
+                        <h4 className="text-sm font-bold text-gray-400 mb-2">אקורדים בשיר (לחץ לצפייה בדיאגרמה):</h4>
+                        <div className="flex flex-wrap gap-2">
+                            {song.chords.map(c => (
+                                <button key={c} onClick={() => onOpenChord(c)} className="bg-brand-50 hover:bg-brand-100 text-brand-700 font-bold px-4 py-2 rounded-xl text-lg font-mono transition-all border border-brand-200">
+                                    {c}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Song Chords & Lyrics Content */}
+                    <div className="space-y-8">
+                        {song.content.map((sec, i) => (
+                            <div key={i} className="space-y-4">
+                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">{sec.title}</h4>
+                                <div className="space-y-4">
+                                    {sec.lines.map((line, j) => (
+                                        <div key={j} className="space-y-1">
+                                            <button onClick={() => onOpenChord(line.chord)} className="text-brand-600 font-bold font-mono text-sm hover:underline">
+                                                {line.chord}
+                                            </button>
+                                            <div className="text-lg text-gray-800">{line.text}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <InteractionBar />
+                </div>
+            );
+        };
+
+        // --- Main App Component ---
+        const App = () => {
+            const [activeTab, setActiveTab] = useState('beginner'); // 'beginner', 'library', 'song'
+            const [selectedSong, setSelectedSong] = useState(null);
+            const [selectedChordModal, setSelectedChordModal] = useState(null);
+            const [searchQuery, setSearchQuery] = useState('');
+
+            const handleSelectSong = (song) => {
+                setSelectedSong(song);
+                setActiveTab('song');
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col">
+                    {/* Header Nav */}
+                    <header className="bg-white border-b border-gray-100 sticky top-0 z-40">
+                        <div className="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                            <div className="flex items-center justify-between w-full md:w-auto">
+                                <h1 onClick={() => setActiveTab('beginner')} className="text-2xl font-black text-brand-600 cursor-pointer tracking-tight">
+                                    GuitarFlow <span className="text-xs bg-brand-100 text-brand-700 px-2 py-0.5 rounded-full font-normal">בעברית</span>
+                                </h1>
+                            </div>
+
+                            {/* Search Bar */}
+                            <div className="relative w-full md:w-80">
+                                <input 
+                                    type="text" 
+                                    placeholder="חפש שיר או אמן..."
+                                    value={searchQuery}
+                                    onChange={(e) => {
+                                        setSearchQuery(e.target.value);
+                                        if(activeTab !== 'library') setActiveTab('library');
+                                    }}
+                                    className="w-full bg-gray-50 border border-gray-200 rounded-full py-2 pr-10 pl-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 text-right"
+                                />
+                                <span className="absolute right-3 top-2.5 text-gray-400">
+                                    <Icons.Search />
+                                </span>
+                            </div>
+
+                            {/* Nav Buttons */}
+                            <nav className="flex items-center gap-2 w-full md:w-auto justify-center">
+                                <button 
+                                    onClick={() => setActiveTab('beginner')} 
+                                    className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${activeTab === 'beginner' ? 'bg-brand-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                                >
+                                    מסלול מתחילים
+                                </button>
+                                <button 
+                                    onClick={() => setActiveTab('library')} 
+                                    className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${activeTab === 'library' ? 'bg-brand-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                                >
+                                    ספריית שירים
+                                </button>
+                            </nav>
+                        </div>
+                    </header>
+
+                    {/* Main Content Area */}
+                    <main className="flex-1 max-w-4xl w-full mx-auto p-4 md:p-6">
+                        {activeTab === 'beginner' && <BeginnerLessonView onOpenChord={setSelectedChordModal} />}
+                        {activeTab === 'library' && <SongLibraryView onSelectSong={handleSelectSong} searchQuery={searchQuery} />}
+                        {activeTab === 'song' && selectedSong && <SongDetailView song={selectedSong} onOpenChord={setSelectedChordModal} />}
+                    </main>
+
+                    {/* Interactive Modal for Chord Diagram */}
+                    {selectedChordModal && (
+                        <InteractiveFretboard chordKey={selectedChordModal} onClose={() => setSelectedChordModal(null)} />
+                    )}
+
+                    <footer className="bg-white border-t border-gray-100 py-6 text-center text-xs text-gray-400 mt-12">
+                        GuitarFlow © 2026 - ללמוד לנגן בגיטרה בקצב שלך
+                    </footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

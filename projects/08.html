@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitBody Calisthenics - מאמן כושר אישי במשקל גוף</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for Progress tracking -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts: Heebo -->
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Heebo', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            dark: '#0f172a',
+                            card: '#1e293b',
+                            accent: '#10b981',
+                            cyan: '#06b6d4',
+                            glow: '#34d399'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Heebo', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .gradient-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            transition: all 0.3s ease;
+        }
+        .gradient-btn:hover {
+            background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.4);
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-emerald-500 selection:text-white">
+
+    <!-- Header Navigation -->
+    <header class="border-b border-slate-800 bg-slate-900/80 sticky top-0 z-50 backdrop-blur-md">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('assessment')">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-black text-xl">
+                    <i class="fa-solid fa-dumbbell"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-black tracking-wider gradient-text">FITBODY</h1>
+                    <p class="text-xs text-slate-400">אימון משקל גוף אישי</p>
+                </div>
+            </div>
+            
+            <nav class="flex items-center gap-1 sm:gap-3 text-xs sm:text-sm font-semibold overflow-x-auto">
+                <button onclick="switchTab('assessment')" id="nav-assessment" class="px-3 py-2 rounded-lg text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 transition whitespace-nowrap">
+                    <i class="fa-solid fa-clipboard-check ml-1"></i> אבחון רמה
+                </button>
+                <button onclick="switchTab('program')" id="nav-program" class="px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition whitespace-nowrap">
+                    <i class="fa-solid fa-calendar-days ml-1"></i> תוכנית אימונים
+                </button>
+                <button onclick="switchTab('nutrition')" id="nav-nutrition" class="px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition whitespace-nowrap">
+                    <i class="fa-solid fa-utensils ml-1"></i> תזונה ומים
+                </button>
+                <button onclick="switchTab('stats')" id="nav-stats" class="px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition whitespace-nowrap">
+                    <i class="fa-solid fa-chart-line ml-1"></i> התקדמות
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-4xl mx-auto px-4 py-8 flex-grow w-full">
+
+        <!-- VIEW 1: ASSESSMENT & GOALS -->
+        <section id="view-assessment" class="space-y-8">
+            <div class="text-center space-y-3">
+                <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest">
+                    ללא ציוד • ללא משקולות • 100% משקל גוף
+                </span>
+                <h2 class="text-3xl sm:text-5xl font-extrabold">המפתח לגוף חזק, חטוף ובריא</h2>
+                <p class="text-slate-400 text-sm sm:text-base max-w-2xl mx-auto">
+                    הזן את נתוני המקסימום המדויקים שלך. המערכת תבנה עבורך תוכנית אימונים אישית ומותאמת לרמתך להורדה במשקל, חיטוב ובניית שריר.
+                </p>
+            </div>
+
+            <!-- Rules Banner -->
+            <div class="glass-card rounded-2xl p-4 sm:p-6 border-amber-500/30 bg-amber-500/5">
+                <div class="flex items-start gap-3">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-400 text-xl mt-1"></i>
+                    <div class="text-sm text-slate-300 space-y-1">
+                        <h4 class="font-bold text-amber-400 text-base">דגשים קריטיים לבדיקת המקסימום:</h4>
+                        <p><strong>שכיבות סמיכה:</strong> חזה חייב לנגוע ברצפה בכל חזרה. אם אינך מצליח אף חזרה אחת מלאה - רשום 0 ותקבל שכיבות סמיכה על הברכיים.</p>
+                        <p><strong>מתח:</strong> סנטר עובר את המוט. אם אינך מצליח אף חזרה אחת - רשום 0 ותקבל אימון מתח מותאם בעזרת כיסא!</p>
+                        <p><strong>אימוני בטן:</strong> נבדוק את זמן ה-Plank שלך בשניות להתאמת דרגת הקושי של הליבה.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form -->
+            <form id="assessmentForm" onsubmit="handleAssessmentSubmit(event)" class="glass-card p-6 sm:p-8 rounded-3xl space-y-6 shadow-2xl border border-slate-700/50">
+                <!-- Program Focus Selector -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-300 mb-3">מה התמקדות האימונים שתרצה?</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <label class="relative flex flex-col items-center justify-center p-4 rounded-xl border border-slate-700 bg-slate-800/60 cursor-pointer hover:border-emerald-500 transition group text-center">
+                            <input type="radio" name="focus" value="upper" class="hidden peer">
+                            <div class="peer-checked:border-emerald-500 peer-checked:bg-emerald-500/10 absolute inset-0 rounded-xl border-2 border-transparent transition"></div>
+                            <i class="fa-solid fa-person-dots-from-line text-2xl text-emerald-400 mb-2"></i>
+                            <span class="font-bold text-sm relative z-10">שכיבות סמיכה + מתח</span>
+                        </label>
+
+                        <label class="relative flex flex-col items-center justify-center p-4 rounded-xl border border-slate-700 bg-slate-800/60 cursor-pointer hover:border-emerald-500 transition group text-center">
+                            <input type="radio" name="focus" value="abs_only" class="hidden peer">
+                            <div class="peer-checked:border-emerald-500 peer-checked:bg-emerald-500/10 absolute inset-0 rounded-xl border-2 border-transparent transition"></div>
+                            <i class="fa-solid fa-shield-halved text-2xl text-amber-400 mb-2"></i>
+                            <span class="font-bold text-sm relative z-10">אימון בטן בלבד (Core Focus)</span>
+                        </label>
+
+                        <label class="relative flex flex-col items-center justify-center p-4 rounded-xl border border-slate-700 bg-slate-800/60 cursor-pointer hover:border-emerald-500 transition group text-center">
+                            <input type="radio" name="focus" value="all" checked class="hidden peer">
+                            <div class="peer-checked:border-emerald-500 peer-checked:bg-emerald-500/10 absolute inset-0 rounded-xl border-2 border-transparent transition"></div>
+                            <i class="fa-solid fa-fire-flame-curved text-2xl text-cyan-400 mb-2"></i>
+                            <span class="font-bold text-sm relative z-10">גם וגם (כל הגוף + בטן) 🔥</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Goal Selector -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-300 mb-3">מה המטרה העיקרית שלך?</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <label class="relative flex flex-col items-center justify-center p-4 rounded-xl border border-slate-700 bg-slate-800/60 cursor-pointer hover:border-emerald-500 transition group text-center">
+                            <input type="radio" name="goal" value="weight_loss" checked class="hidden peer">
+                            <div class="peer-checked:border-emerald-500 peer-checked:bg-emerald-500/10 absolute inset-0 rounded-xl border-2 border-transparent transition"></div>
+                            <i class="fa-solid fa-fire text-2xl text-emerald-400 mb-2"></i>
+                            <span class="font-bold text-sm relative z-10">הורדה במשקל & שריפת שומן</span>
+                        </label>
+
+                        <label class="relative flex flex-col items-center justify-center p-4 rounded-xl border border-slate-700 bg-slate-800/60 cursor-pointer hover:border-emerald-500 transition group text-center">
+                            <input type="radio" name="goal" value="hypertrophy" class="hidden peer">
+                            <div class="peer-checked:border-emerald-500 peer-checked:bg-emerald-500/10 absolute inset-0 rounded-xl border-2 border-transparent transition"></div>
+                            <i class="fa-solid fa-child text-2xl text-cyan-400 mb-2"></i>
+                            <span class="font-bold text-sm relative z-10">חיטוב ובניית שריר</span>
+                        </label>
+
+                        <label class="relative flex flex-col items-center justify-center p-4 rounded-xl border border-slate-700 bg-slate-800/60 cursor-pointer hover:border-emerald-500 transition group text-center">
+                            <input type="radio" name="goal" value="endurance" class="hidden peer">
+                            <div class="peer-checked:border-emerald-500 peer-checked:bg-emerald-500/10 absolute inset-0 rounded-xl border-2 border-transparent transition"></div>
+                            <i class="fa-solid fa-bolt text-2xl text-amber-400 mb-2"></i>
+                            <span class="font-bold text-sm relative z-10">סיבולת ושיפור חזרות</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Personal Measurements Grid for Nutrition Calculator -->
+                <div class="border-t border-slate-800 pt-6">
+                    <h4 class="font-bold text-slate-200 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-calculator text-emerald-400"></i> נתונים אישיים לחישוב קלוריות ומים
+                    </h4>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-1">גיל</label>
+                            <input type="number" id="userAge" min="10" max="90" value="20" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-1">משקל (ק"ג)</label>
+                            <input type="number" id="userWeight" min="30" max="200" value="70" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-1">גובה (ס"מ)</label>
+                            <input type="number" id="userHeight" min="120" max="220" value="175" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-1">מגדר</label>
+                            <select id="userGender" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold">
+                                <option value="male">זכר</option>
+                                <option value="female">נקבה</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Inputs Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Pushups Input -->
+                    <div class="bg-slate-800/40 p-5 rounded-2xl border border-slate-700/60 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-slate-200 flex items-center gap-2">
+                                <i class="fa-solid fa-person-dots-from-line text-emerald-400"></i> שכיבות סמיכה
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-400">חזה נוגע ברצפה. אם אינך מצליח, רשום 0.</p>
+                        <div class="relative">
+                            <input type="number" id="maxPushups" min="0" max="150" value="10" required 
+                                   class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-2xl font-bold text-emerald-400 focus:outline-none focus:border-emerald-500">
+                            <span class="absolute left-4 top-4 text-xs font-bold text-slate-500">חזרות</span>
+                        </div>
+                    </div>
+
+                    <!-- Pullups Input -->
+                    <div class="bg-slate-800/40 p-5 rounded-2xl border border-slate-700/60 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-slate-200 flex items-center gap-2">
+                                <i class="fa-solid fa-dumbbell text-cyan-400"></i> עליות מתח
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-400">סנטר עובר מוט. אם אינך מצליח, רשום 0.</p>
+                        <div class="relative">
+                            <input type="number" id="maxPullups" min="0" max="80" value="3" required 
+                                   class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-2xl font-bold text-cyan-400 focus:outline-none focus:border-cyan-500">
+                            <span class="absolute left-4 top-4 text-xs font-bold text-slate-500">חזרות</span>
+                        </div>
+                    </div>
+
+                    <!-- Plank Test Input -->
+                    <div class="bg-slate-800/40 p-5 rounded-2xl border border-slate-700/60 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-slate-200 flex items-center gap-2">
+                                <i class="fa-solid fa-stopwatch text-amber-400"></i> פלאנק לבטן
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-400">זמן מקסימלי בשניות בהחזקת פלאנק ישר.</p>
+                        <div class="relative">
+                            <input type="number" id="maxPlank" min="5" max="600" value="60" required 
+                                   class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-2xl font-bold text-amber-400 focus:outline-none focus:border-amber-500">
+                            <span class="absolute left-4 top-4 text-xs font-bold text-slate-500">שניות</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full py-4 rounded-xl font-extrabold text-lg text-slate-900 gradient-btn shadow-lg flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> צור לי תוכנית אימונים אישית
+                </button>
+            </form>
+        </section>
+
+        <!-- VIEW 2: PROGRAM DISPLAY -->
+        <section id="view-program" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-800/60 p-6 rounded-2xl border border-slate-700">
+                <div>
+                    <h2 class="text-2xl font-extrabold text-white">תוכנית האימונים האישית שלך</h2>
+                    <p class="text-xs sm:text-sm text-slate-400" id="programOverviewText">מתוכננת על פי רמת הבסיס והיעדים שלך</p>
+                </div>
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <!-- WhatsApp Share Button for Program -->
+                    <button onclick="shareWhatsApp('program')" class="flex-1 sm:flex-none text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-2 rounded-lg transition flex items-center justify-center gap-1.5">
+                        <i class="fa-brands fa-whatsapp text-lg"></i> שתף תוכנית
+                    </button>
+                    <button onclick="switchTab('assessment')" class="text-xs border border-slate-600 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg transition whitespace-nowrap">
+                        <i class="fa-solid fa-pen ml-1"></i> עדכן נתונים
+                    </button>
+                </div>
+            </div>
+
+            <!-- Weeks Selector -->
+            <div class="flex gap-2 border-b border-slate-800 pb-2 overflow-x-auto" id="weekTabs">
+                <button onclick="selectWeek(1)" id="week-tab-1" class="px-4 py-2 rounded-xl text-sm font-bold bg-emerald-500 text-slate-950 transition">שבוע 1</button>
+                <button onclick="selectWeek(2)" id="week-tab-2" class="px-4 py-2 rounded-xl text-sm font-bold text-slate-400 hover:bg-slate-800 transition">שבוע 2</button>
+                <button onclick="selectWeek(3)" id="week-tab-3" class="px-4 py-2 rounded-xl text-sm font-bold text-slate-400 hover:bg-slate-800 transition">שבוע 3</button>
+                <button onclick="selectWeek(4)" id="week-tab-4" class="px-4 py-2 rounded-xl text-sm font-bold text-slate-400 hover:bg-slate-800 transition">שבוע 4 (עומס יתר)</button>
+            </div>
+
+            <!-- Days Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="daysContainer">
+                <!-- Dynamically generated days -->
+            </div>
+        </section>
+
+        <!-- VIEW 3: LIVE WORKOUT SESSION -->
+        <section id="view-workout" class="hidden space-y-6">
+            <!-- Dynamic Workout Engine Rendered via JavaScript -->
+        </section>
+
+        <!-- VIEW 4: NUTRITION CALCULATOR -->
+        <section id="view-nutrition" class="hidden space-y-6">
+            <div class="glass-card p-6 rounded-2xl border border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div class="space-y-1">
+                    <h2 class="text-2xl font-extrabold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-utensils text-emerald-400"></i> המלצות תזונה ומים מותאמות אישית
+                    </h2>
+                    <p class="text-sm text-slate-400">חישוב מדויק של קלוריות, מים ואבות מזון להשגת היעד שלך בצורה הבריאה והמהירה ביותר</p>
+                </div>
+                <!-- WhatsApp Share Button for Nutrition -->
+                <button onclick="shareWhatsApp('nutrition')" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2.5 rounded-xl transition flex items-center justify-center gap-2 whitespace-nowrap">
+                    <i class="fa-brands fa-whatsapp text-lg"></i> שתף תזונה
+                </button>
+            </div>
+
+            <!-- Nutrition Highlights -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <!-- Calories Card -->
+                <div class="glass-card p-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 text-center space-y-2">
+                    <i class="fa-solid fa-fire-flame-curved text-3xl text-emerald-400"></i>
+                    <span class="text-xs font-bold text-slate-400 uppercase block">קלוריות מומלצות ליום</span>
+                    <div class="text-4xl font-black text-emerald-400 font-mono" id="nutCalories">0</div>
+                    <p class="text-xs text-slate-300" id="nutCaloriesDesc">להורדה במשקל ושריפת שומן</p>
+                </div>
+
+                <!-- Water Card -->
+                <div class="glass-card p-6 rounded-2xl border border-cyan-500/30 bg-cyan-500/5 text-center space-y-2">
+                    <i class="fa-solid fa-bottle-water text-3xl text-cyan-400"></i>
+                    <span class="text-xs font-bold text-slate-400 uppercase block">מים לשתייה ביום</span>
+                    <div class="text-4xl font-black text-cyan-400 font-mono" id="nutWater">0</div>
+                    <p class="text-xs text-slate-300">כולל תוספת לימי אימון (כ-10-12 כוסות)</p>
+                </div>
+
+                <!-- Protein Card -->
+                <div class="glass-card p-6 rounded-2xl border border-amber-500/30 bg-amber-500/5 text-center space-y-2">
+                    <i class="fa-solid fa-egg text-3xl text-amber-400"></i>
+                    <span class="text-xs font-bold text-slate-400 uppercase block">חלבון יומי מומלץ</span>
+                    <div class="text-4xl font-black text-amber-400 font-mono" id="nutProtein">0</div>
+                    <p class="text-xs text-slate-300">לשיקום השרירים ולתחושת שובע</p>
+                </div>
+            </div>
+
+            <!-- Macros Breakdown & Recommendations -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="glass-card p-6 rounded-2xl border border-slate-700 space-y-4">
+                    <h3 class="font-bold text-slate-200 border-b border-slate-800 pb-2">חלוקת אבות מזון מומלצת</h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-300"><i class="fa-solid fa-circle text-amber-400 text-xs ml-2"></i>חלבונים:</span>
+                            <span class="font-bold text-amber-400" id="macroProteinText">0 גרם (30%)</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-300"><i class="fa-solid fa-circle text-cyan-400 text-xs ml-2"></i>פחמימות (מורכבות):</span>
+                            <span class="font-bold text-cyan-400" id="macroCarbsText">0 גרם (45%)</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-300"><i class="fa-solid fa-circle text-emerald-400 text-xs ml-2"></i>שומנים בריאים:</span>
+                            <span class="font-bold text-emerald-400" id="macroFatsText">0 גרם (25%)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card p-6 rounded-2xl border border-slate-700 space-y-4">
+                    <h3 class="font-bold text-slate-200 border-b border-slate-800 pb-2">טיפים זהב לתוצאות מהירות</h3>
+                    <ul class="text-xs sm:text-sm text-slate-300 space-y-2.5">
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-check text-emerald-400 mt-1"></i>
+                            <span><strong>שתיית מים:</strong> שתה כוס מים גדולה מיד כשאתה קם בבוקר וכוס נוספת כ-20 דקות לפני כל ארוחה.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-check text-emerald-400 mt-1"></i>
+                            <span><strong>חלבון בכל ארוחה:</strong> ביצים, גבינות רזות, חזה עוף, טופו, דגים או קטניות יעזרו לשמור על מסת השריר ולשרוף שומן.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-check text-emerald-400 mt-1"></i>
+                            <span><strong>הימנע מסוכר מעובד:</strong> שתייה מתוקה ומאפים מעטים את הירידה במשקל. מעבר לשיבולת שועל, אורז מלא וירקות ייתן אנרגיה לכל היום.</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 5: PROGRESS & STATS -->
+        <section id="view-stats" class="hidden space-y-6">
+            <div class="glass-card p-6 rounded-2xl border border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div class="space-y-1">
+                    <h2 class="text-2xl font-extrabold text-white">מעקב התקדמות וסטטיסטיקה</h2>
+                    <p class="text-sm text-slate-400">כאן תוכל לראות את השיפור בכושר האישי שלך לאורך זמן</p>
+                </div>
+                <!-- WhatsApp Share Button for Stats -->
+                <button onclick="shareWhatsApp('stats')" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2.5 rounded-xl transition flex items-center justify-center gap-2 whitespace-nowrap">
+                    <i class="fa-brands fa-whatsapp text-lg"></i> שתף הישגים
+                </button>
+            </div>
+
+            <!-- Stats Overview Cards -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 text-center">
+                    <span class="text-xs text-slate-400 block mb-1">מקסימום שכיבות סמיכה</span>
+                    <span class="text-3xl font-black text-emerald-400" id="statMaxPushups">0</span>
+                </div>
+                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 text-center">
+                    <span class="text-xs text-slate-400 block mb-1">מקסימום מתח</span>
+                    <span class="text-3xl font-black text-cyan-400" id="statMaxPullups">0</span>
+                </div>
+                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 text-center">
+                    <span class="text-xs text-slate-400 block mb-1">אימונים שבוצעו</span>
+                    <span class="text-3xl font-black text-amber-400" id="statWorkoutsDone">0</span>
+                </div>
+                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 text-center">
+                    <span class="text-xs text-slate-400 block mb-1">רצף ימים (Streak)</span>
+                    <span class="text-3xl font-black text-rose-400" id="statStreak">0</span>
+                </div>
+            </div>
+
+            <!-- Progress Log Chart -->
+            <div class="glass-card p-6 rounded-2xl border border-slate-700 space-y-4">
+                <h3 class="font-bold text-slate-200">גרף התקדמות חזרות מקסימליות</h3>
+                <div class="h-64 w-full">
+                    <canvas id="progressChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 bg-slate-950 py-6 text-center text-xs text-slate-500">
+        <div class="max-w-6xl mx-auto px-4">
+            FitBody Calisthenics © 2026 • אימוני משקל גוף מותאמים אישית • הקפד על טכניקה נכונה למניעת פציעות
+        </div>
+    </footer>
+
+    <!-- Application Script -->
+    <script>
+        // State Management
+        let appState = {
+            user: {
+                maxPushups: 10,
+                maxPullups: 3,
+                maxPlank: 45,
+                age: 20,
+                weight: 70,
+                height: 175,
+                gender: 'male',
+                focus: 'all', // 'upper', 'abs_only', 'all'
+                goal: 'weight_loss',
+                history: [],
+                completedWorkouts: 0
+            },
+            currentWeek: 1,
+            activeWorkout: null,
+            currentExerciseIdx: 0,
+            currentSet: 1,
+            restInterval: null
+        };
+
+        // Navigation tab switching function
+        function switchTab(tabId) {
+            const views = ['assessment', 'program', 'nutrition', 'workout', 'stats'];
+            views.forEach(v => {
+                const el = document.getElementById(`view-${v}`);
+                if (el) el.classList.add('hidden');
+                
+                const navBtn = document.getElementById(`nav-${v}`);
+                if (navBtn) {
+                    navBtn.className = "px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition whitespace-nowrap";
+                }
+            });
+
+            const activeView = document.getElementById(`view-${tabId}`);
+            if (activeView) activeView.classList.remove('hidden');
+
+            const activeNav = document.getElementById(`nav-${tabId}`);
+            if (activeNav) {
+                activeNav.className = "px-3 py-2 rounded-lg text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 transition whitespace-nowrap";
+            }
+
+            if (tabId === 'nutrition') {
+                calculateNutrition();
+            }
+
+            if (tabId === 'stats') {
+                updateStatsUI();
+                if (!chartInstance) {
+                    setTimeout(initChart, 100);
+                }
+            }
+        }
+
+        // Load data from localStorage
+        function loadUserData() {
+            const saved = localStorage.getItem('fitbody_user_data');
+            if (saved) {
+                try {
+                    appState.user = Object.assign(appState.user, JSON.parse(saved));
+                    document.getElementById('maxPushups').value = appState.user.maxPushups || 0;
+                    document.getElementById('maxPullups').value = appState.user.maxPullups || 0;
+                    document.getElementById('maxPlank').value = appState.user.maxPlank || 60;
+                    
+                    document.getElementById('userAge').value = appState.user.age || 20;
+                    document.getElementById('userWeight').value = appState.user.weight || 70;
+                    document.getElementById('userHeight').value = appState.user.height || 175;
+                    document.getElementById('userGender').value = appState.user.gender || 'male';
+
+                    const goalRadio = document.querySelector(`input[name="goal"][value="${appState.user.goal}"]`);
+                    if (goalRadio) goalRadio.checked = true;
+
+                    const focusRadio = document.querySelector(`input[name="focus"][value="${appState.user.focus || 'all'}"]`);
+                    if (focusRadio) focusRadio.checked = true;
+                } catch(e) {
+                    console.error("Failed to parse user data", e);
+                }
+            }
+            updateStatsUI();
+            calculateNutrition();
+        }
+
+        // Handle Form Submission
+        function handleAssessmentSubmit(e) {
+            e.preventDefault();
+            const pushups = parseInt(document.getElementById('maxPushups').value) || 0;
+            const pullups = parseInt(document.getElementById('maxPullups').value) || 0;
+            const plank = parseInt(document.getElementById('maxPlank').value) || 60;
+            
+            const age = parseInt(document.getElementById('userAge').value) || 20;
+            const weight = parseInt(document.getElementById('userWeight').value) || 70;
+            const height = parseInt(document.getElementById('userHeight').value) || 175;
+            const gender = document.getElementById('userGender').value;
+
+            const goal = document.querySelector('input[name="goal"]:checked').value;
+            const focus = document.querySelector('input[name="focus"]:checked').value;
+
+            appState.user.maxPushups = pushups;
+            appState.user.maxPullups = pullups;
+            appState.user.maxPlank = plank;
+            appState.user.age = age;
+            appState.user.weight = weight;
+            appState.user.height = height;
+            appState.user.gender = gender;
+            appState.user.goal = goal;
+            appState.user.focus = focus;
+
+            if (!appState.user.history) appState.user.history = [];
+            if (appState.user.history.length === 0) {
+                appState.user.history.push({
+                    date: new Date().toLocaleDateString('he-IL'),
+                    pushups: pushups,
+                    pullups: pullups
+                });
+            }
+
+            saveUserData();
+            calculateNutrition();
+            renderProgram();
+            switchTab('program');
+        }
+
+        // Nutrition & Water Calculation Logic
+        function calculateNutrition() {
+            const { age, weight, height, gender, goal } = appState.user;
+
+            // BMR (Mifflin-St Jeor Formula)
+            let bmr = (10 * weight) + (6.25 * height) - (5 * age);
+            bmr = gender === 'male' ? bmr + 5 : bmr - 161;
+
+            // TDEE (Total Daily Energy Expenditure)
+            let tdee = Math.round(bmr * 1.375);
+            let targetCalories = tdee;
+            let goalDesc = "";
+
+            if (goal === 'weight_loss') {
+                targetCalories = Math.round(tdee - 400);
+                goalDesc = "גרעון קלורי מתון להורדה במשקל ושריפת שומן";
+            } else if (goal === 'hypertrophy') {
+                targetCalories = Math.round(tdee + 250);
+                goalDesc = "עודף קלורי לבניית שריר וחיטוב";
+            } else {
+                goalDesc = "מאזן ניטרלי לשמירה על המשקל ושיפור הסיבולת";
+            }
+
+            const waterLiters = ((weight * 35 / 1000) + 0.5).toFixed(1);
+            const proteinGrams = Math.round(weight * 2.0);
+            const proteinCal = proteinGrams * 4;
+
+            const fatCal = targetCalories * 0.25;
+            const fatGrams = Math.round(fatCal / 9);
+
+            const carbsCal = targetCalories - (proteinCal + fatCal);
+            const carbsGrams = Math.max(50, Math.round(carbsCal / 4));
+
+            // Update UI
+            const nutCalEl = document.getElementById('nutCalories');
+            if (nutCalEl) nutCalEl.textContent = targetCalories.toLocaleString();
+
+            const nutWaterEl = document.getElementById('nutWater');
+            if (nutWaterEl) nutWaterEl.textContent = `${waterLiters} ליטר`;
+
+            const nutProtEl = document.getElementById('nutProtein');
+            if (nutProtEl) nutProtEl.textContent = `${proteinGrams} גרם`;
+
+            const nutDescEl = document.getElementById('nutCaloriesDesc');
+            if (nutDescEl) nutDescEl.textContent = goalDesc;
+
+            const macroProt = document.getElementById('macroProteinText');
+            if (macroProt) macroProt.textContent = `${proteinGrams} גרם (${Math.round((proteinCal/targetCalories)*100)}%)`;
+
+            const macroCarbs = document.getElementById('macroCarbsText');
+            if (macroCarbs) macroCarbs.textContent = `${carbsGrams} גרם (${Math.round((carbsCal/targetCalories)*100)}%)`;
+
+            const macroFats = document.getElementById('macroFatsText');
+            if (macroFats) macroFats.textContent = `${fatGrams} גרם (${Math.round((fatCal/targetCalories)*100)}%)`;
+        }
+
+        // Save data to localStorage
+        function saveUserData() {
+            try {
+                localStorage.setItem('fitbody_user_data', JSON.stringify(appState.user));
+            } catch(e) {
+                console.error("Failed to save user data", e);
+            }
+        }
+
+        // Generate Program Workouts for 7 days based on focus
+        function renderProgram() {
+            const daysContainer = document.getElementById('daysContainer');
+            if (!daysContainer) return;
+            daysContainer.innerHTML = '';
+
+            const pMax = appState.user.maxPushups;
+            const uMax = appState.user.maxPullups;
+            const plankMax = appState.user.maxPlank;
+            const focus = appState.user.focus || 'all';
+
+            // Base Multipliers for Week Progression
+            const weekMult = 1 + ((appState.currentWeek - 1) * 0.1);
+
+            const pushName = pMax === 0 ? "שכיבות סמיכה על הברכיים" : "שכיבות סמיכה (חזה לרצפה)";
+            const pushReps = Math.round((pMax === 0 ? 8 : Math.max(2, Math.round(pMax * 0.5))) * weekMult);
+
+            const pullName = uMax === 0 ? "עליות מתח עם כיסא (ירידה איטית)" : "עליות מתח (סנטר מעל מוט)";
+            const pullReps = Math.round((uMax === 0 ? 5 : Math.max(1, Math.round(uMax * 0.4))) * weekMult);
+
+            const plankTime = Math.round((Math.max(15, Math.round(plankMax * 0.6))) * weekMult);
+
+            let daysConfig = [];
+
+            if (focus === 'upper') {
+                daysConfig = [
+                    {
+                        day: 1, title: 'יום א׳ - כוח חזה ומתח', type: 'big', icon: 'fa-fire text-amber-500',
+                        exercises: [
+                            { name: pushName, sets: 4, reps: `${pushReps} חזרות`, rest: 60, icon: 'fa-person-dots-from-line' },
+                            { name: pullName, sets: 4, reps: `${pullReps} חזרות`, rest: 90, icon: 'fa-dumbbell' }
+                        ]
+                    },
+                    {
+                        day: 2, title: 'יום ב׳ - התאוששות אקטיבית', type: 'small', icon: 'fa-leaf text-emerald-400',
+                        exercises: [
+                            { name: 'תלייה פסיבית על המוט (שחרור גב)', sets: 3, reps: '20 שניות', rest: 45, icon: 'fa-child' },
+                            { name: 'מתיחת קוברה ומתיחות חזה', sets: 3, reps: '30 שניות', rest: 30, icon: 'fa-spa' }
+                        ]
+                    },
+                    {
+                        day: 3, title: 'יום ג׳ - נפח שכיבות סמיכה', type: 'big', icon: 'fa-bolt text-cyan-400',
+                        exercises: [
+                            { name: pushName, sets: 5, reps: `${Math.max(1, pushReps - 1)} חזרות`, rest: 60, icon: 'fa-person-dots-from-line' },
+                            { name: pullName, sets: 3, reps: `${pullReps} חזרות`, rest: 90, icon: 'fa-dumbbell' }
+                        ]
+                    },
+                    {
+                        day: 4, title: 'יום ד׳ - מתיחות וגמישות', type: 'small', icon: 'fa-leaf text-emerald-400',
+                        exercises: [
+                            { name: 'סקוואט במשקל גוף', sets: 3, reps: '15 חזרות', rest: 45, icon: 'fa-person-running' }
+                        ]
+                    },
+                    {
+                        day: 5, title: 'יום ה׳ - אתגר גב וחזה מרוכז', type: 'big', icon: 'fa-fire text-rose-500',
+                        exercises: [
+                            { name: pullName, sets: 4, reps: `${pullReps} חזרות`, rest: 90, icon: 'fa-dumbbell' },
+                            { name: pushName, sets: 4, reps: `${pushReps} חזרות`, rest: 60, icon: 'fa-person-dots-from-line' }
+                        ]
+                    },
+                    {
+                        day: 6, title: 'יום ו׳ - מתיחות ושחרור', type: 'small', icon: 'fa-leaf text-emerald-400',
+                        exercises: [
+                            { name: 'מתיחות מלאות לכתפיים ולחזה', sets: 1, reps: '10 דקות', rest: 0, icon: 'fa-spa' }
+                        ]
+                    },
+                    {
+                        day: 7, title: 'יום ש׳ - סיכום שבועי ומקסימום', type: 'big', icon: 'fa-trophy text-amber-400',
+                        exercises: [
+                            { name: pushName, sets: 3, reps: `${pushReps + 1} חזרות`, rest: 60, icon: 'fa-person-dots-from-line' },
+                            { name: pullName, sets: 3, reps: `${pullReps} חזרות`, rest: 90, icon: 'fa-dumbbell' }
+                        ]
+                    }
+                ];
+            } else if (focus === 'abs_only') {
+                daysConfig = [
+                    {
+                        day: 1, title: 'יום א׳ - חיזוק ליבה דינמי', type: 'big', icon: 'fa-shield-halved text-amber-500',
+                        exercises: [
+                            { name: 'פלאנק ישר', sets: 4, reps: `${plankTime} שניות`, rest: 45, icon: 'fa-stopwatch' },
+                            { name: 'הרמות ברכיים לחזה', sets: 4, reps: '12 חזרות', rest: 45, icon: 'fa-bullseye' }
+                        ]
+                    },
+                    {
+                        day: 2, title: 'יום ב׳ - התאוששות אקטיבית', type: 'small', icon: 'fa-leaf text-emerald-400',
+                        exercises: [
+                            { name: 'מתיחת קוברה', sets: 3, reps: '30 שניות', rest: 30, icon: 'fa-spa' }
+                        ]
+                    },
+                    {
+                        day: 3, title: 'יום ג׳ - אלכסונים וליבה', type: 'big', icon: 'fa-bolt text-cyan-400',
+                        exercises: [
+                            { name: 'פלאנק צידי (Side Plank)', sets: 3, reps: `${Math.round(plankTime * 0.7)} שניות`, rest: 45, icon: 'fa-stopwatch' },
+                            { name: 'כפיפות בטן איטיות', sets: 4, reps: '15 חזרות', rest: 45, icon: 'fa-fire' }
+                        ]
+                    },
+                    {
+                        day: 4, title: 'יום ד׳ - מנוחה ומתיחות', type: 'small', icon: 'fa-leaf text-emerald-400',
+                        exercises: [
+                            { name: 'מתיחות גב תחתון וליבה', sets: 1, reps: '8 דקות', rest: 0, icon: 'fa-spa' }
+                        ]
+                    },
+                    {
+                        day: 5, title: 'יום ה׳ - סיבולת בטן מתקדמת', type: 'big', icon: 'fa-fire text-rose-500',
+                        exercises: [
+                            { name: 'פלאנק ישר', sets: 4, reps: `${plankTime + 5} שניות`, rest: 45, icon: 'fa-stopwatch' },
+                            { name: 'הרמות רגליים בשכיבה', sets: 3, reps: '10 חזרות', rest: 45, icon: 'fa-bullseye' }
+                        ]
+                    },
+                    {
+                        day: 6, title: 'יום ו׳ - שחרור מתוח', type: 'small', icon: 'fa-leaf text-emerald-400',
+                        exercises: [
+                            { name: 'פלאנק קל', sets: 2, reps: '20 שניות', rest: 30, icon: 'fa-stopwatch' }
+                        ]
+                    },
+                    {
+                        day: 7, title: 'יום ש׳ - אתגר מקסימום פלאנק', type: 'big', icon: 'fa-trophy text-amber-400',
+                        exercises: [
+                            { name: 'פלאנק מקסימלי בזמן', sets: 2, reps: `${plankTime + 10} שניות`, rest: 60, icon: 'fa-stopwatch' }
+                        ]
+                    }
+                ];
+            } else {
+                // All Focus (default)
+                daysConfig = [
+                    {
+                        day: 1, title: 'יום א׳ - כוח עליון + ליבה', type: 'big', icon: 'fa-fire text-amber-500',
+                        exercises: [
+                            { name: pushName, sets: 4, reps: `${pushReps} חזרות`, rest: 60, icon: 'fa-person-dots-from-line' },
+                            { name: pullName, sets: 4, reps: `${pullReps} חזרות`, rest: 90, icon: 'fa-dumbbell' },
+                            { name: 'פלאנק ישר', sets: 3, reps: `${plankTime} שניות`, rest: 45, icon: 'fa-stopwatch' }
+                        ]
+                    },
+                    {
+                        day: 2, title: 'יום ב׳ - התאוששות אקטיבית', type: 'small', icon: 'fa-leaf text-emerald-400',
+                        exercises: [
+                            { name: 'תלייה פסיבית על המוט', sets: 3, reps: '20 שניות', rest: 45, icon: 'fa-child' },
+                            { name: 'פלאנק קל', sets: 2, reps: `${Math.round(plankTime * 0.5)} שניות`, rest: 45, icon: 'fa-stopwatch' },
+                            { name: 'מתיחת קוברה ומתיחות חזה', sets: 3, reps: '30 שניות', rest: 30, icon: 'fa-spa' }
+                        ]
+                    },
+                    {
+                        day: 3, title: 'יום ג׳ - נפח חזרות & ליבה', type: 'big', icon: 'fa-bolt text-cyan-400',
+                        exercises: [
+                            { name: pushName, sets: 4, reps: `${pushReps} חזרות`, rest: 60, icon: 'fa-person-dots-from-line' },
+                            { name: 'הרמות ברכיים לחזה', sets: 3, reps: '12 חזרות', rest: 45, icon: 'fa-bullseye' },
+                            { name: pullName, sets: 3, reps: `${pullReps} חזרות`, rest: 90, icon: 'fa-dumbbell' }
+                        ]
+                    },
+                    {
+                        day: 4, title: 'יום ד׳ - שריפת שומן וגמישות', type: 'small', icon: 'fa-leaf text-emerald-400',
+                        exercises: [
+                            { name: 'סקוואט במשקל גוף', sets: 3, reps: '15 חזרות', rest: 45, icon: 'fa-person-running' },
+                            { name: 'פלאנק צידי', sets: 2, reps: '20 שניות לכל צד', rest: 45, icon: 'fa-stopwatch' }
+                        ]
+                    },
+                    {
+                        day: 5, title: 'יום ה׳ - אתגר כוח מרוכז', type: 'big', icon: 'fa-fire text-rose-500',
+                        exercises: [
+                            { name: pullName, sets: 4, reps: `${pullReps} חזרות`, rest: 90, icon: 'fa-dumbbell' },
+                            { name: pushName, sets: 4, reps: `${pushReps} חזרות`, rest: 60, icon: 'fa-person-dots-from-line' },
+                            { name: 'פלאנק סטטי', sets: 3, reps: `${plankTime} שניות`, rest: 45, icon: 'fa-stopwatch' }
+                        ]
+                    },
+                    {
+                        day: 6, title: 'יום ו׳ - מתיחות ושחרור', type: 'small', icon: 'fa-leaf text-emerald-400',
+                        exercises: [
+                            { name: 'מתיחות מלאות לכל הגוף', sets: 1, reps: '10 דקות', rest: 0, icon: 'fa-spa' },
+                            { name: 'פלאנק מוחזק קל', sets: 2, reps: `${Math.round(plankTime * 0.4)} שניות`, rest: 30, icon: 'fa-stopwatch' }
+                        ]
+                    },
+                    {
+                        day: 7, title: 'יום ש׳ - סיכום שבועי وشריפת קלוריות', type: 'big', icon: 'fa-trophy text-amber-400',
+                        exercises: [
+                            { name: pushName, sets: 3, reps: `${pushReps + 1} חזרות`, rest: 60, icon: 'fa-person-dots-from-line' },
+                            { name: pullName, sets: 3, reps: `${pullReps} חזרות`, rest: 90, icon: 'fa-dumbbell' },
+                            { name: 'פלאנק מקסימלי', sets: 2, reps: `${plankTime} שניות`, rest: 60, icon: 'fa-stopwatch' }
+                        ]
+                    }
+                ];
+            }
+
+            daysConfig.forEach(dayData => {
+                const dayCard = document.createElement('div');
+                dayCard.className = `glass-card rounded-2xl p-5 border ${dayData.type === 'big' ? 'border-emerald-500/30' : 'border-slate-700'} space-y-4 flex flex-col justify-between`;
+                
+                let exercisesHTML = dayData.exercises.map(ex => `
+                    <div class="flex items-center justify-between text-xs sm:text-sm bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">
+                        <span class="flex items-center gap-2 font-semibold">
+                            <i class="fa-solid ${ex.icon} text-emerald-400"></i> ${ex.name}
+                        </span>
+                        <span class="text-slate-400 font-bold">${ex.sets} סטים × ${ex.reps}</span>
+                    </div>
+                `).join('');
+
+                dayCard.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-white text-base flex items-center gap-2">
+                                <i class="fa-solid ${dayData.icon}"></i> ${dayData.title}
+                            </h3>
+                            <span class="text-xs px-2.5 py-1 rounded-full font-bold ${dayData.type === 'big' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'}">
+                                ${dayData.type === 'big' ? 'אימון גדול 🔥' : 'אימון קל 🍃'}
+                            </span>
+                        </div>
+                        <div class="space-y-2">
+                            ${exercisesHTML}
+                        </div>
+                    </div>
+                    <button onclick='startWorkout(${JSON.stringify(dayData)})' class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-emerald-600 text-white font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 border border-slate-700 hover:border-emerald-500 mt-4">
+                        <i class="fa-solid fa-play"></i> התחל אימון זה
+                    </button>
+                `;
+                daysContainer.appendChild(dayCard);
+            });
+        }
+
+        // Select week in tabs
+        function selectWeek(weekNum) {
+            appState.currentWeek = weekNum;
+            for (let i = 1; i <= 4; i++) {
+                const tab = document.getElementById(`week-tab-${i}`);
+                if (tab) {
+                    if (i === weekNum) {
+                        tab.className = "px-4 py-2 rounded-xl text-sm font-bold bg-emerald-500 text-slate-950 transition";
+                    } else {
+                        tab.className = "px-4 py-2 rounded-xl text-sm font-bold text-slate-400 hover:bg-slate-800 transition";
+                    }
+                }
+            }
+            renderProgram();
+        }
+
+        // Live Workout Engine
+        function startWorkout(dayData) {
+            appState.activeWorkout = dayData;
+            appState.currentExerciseIdx = 0;
+            appState.currentSet = 1;
+            renderWorkoutStep();
+            switchTab('workout');
+        }
+
+        function renderWorkoutStep() {
+            const container = document.getElementById('view-workout');
+            if (!container || !appState.activeWorkout) return;
+
+            const ex = appState.activeWorkout.exercises[appState.currentExerciseIdx];
+            if (!ex) {
+                // Workout Completed!
+                appState.user.completedWorkouts = (appState.user.completedWorkouts || 0) + 1;
+                saveUserData();
+                container.innerHTML = `
+                    <div class="glass-card p-8 rounded-3xl text-center space-y-6 max-w-lg mx-auto my-12 border border-emerald-500/40">
+                        <div class="w-20 h-20 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center text-4xl mx-auto border border-emerald-500/40">
+                            <i class="fa-solid fa-trophy"></i>
+                        </div>
+                        <h2 class="text-3xl font-black text-white">כל הכבוד! האימון הושלם!</h2>
+                        <p class="text-slate-300">עשית צעד משמעותי נוסף לעבר הגוף והכושר שאתה רוצה. המשך כך!</p>
+                        
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <button onclick="shareWhatsApp('workout_done')" class="flex-1 py-3 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center gap-2 transition">
+                                <i class="fa-brands fa-whatsapp text-xl"></i> שתף הישג ב-WhatsApp
+                            </button>
+                            <button onclick="switchTab('program')" class="flex-1 py-3 rounded-xl font-bold gradient-btn text-slate-950">
+                                חזור לתוכנית האימונים
+                            </button>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="glass-card p-6 sm:p-8 rounded-3xl space-y-6 border border-slate-700 max-w-2xl mx-auto">
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+                        <div>
+                            <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider">${appState.activeWorkout.title}</span>
+                            <h2 class="text-2xl font-extrabold text-white flex items-center gap-2 mt-1">
+                                <i class="fa-solid ${ex.icon} text-emerald-400"></i> ${ex.name}
+                            </h2>
+                        </div>
+                        <span class="bg-slate-800 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300">
+                            תרגיל ${appState.currentExerciseIdx + 1} מתוך ${appState.activeWorkout.exercises.length}
+                        </span>
+                    </div>
+
+                    <div class="text-center py-6 space-y-2 bg-slate-900/50 rounded-2xl border border-slate-800">
+                        <span class="text-xs text-slate-400 uppercase font-bold">יעד לסט הנוכחי</span>
+                        <div class="text-4xl sm:text-5xl font-black text-emerald-400 font-mono">${ex.reps}</div>
+                        <div class="text-sm text-slate-300 font-semibold mt-2">סט ${appState.currentSet} מתוך ${ex.sets}</div>
+                    </div>
+
+                    <!-- Rest Timer Container -->
+                    <div id="restTimerDisplay" class="hidden bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl text-center space-y-2">
+                        <span class="text-xs font-bold text-amber-400 block">זמן מנוחה</span>
+                        <div class="text-3xl font-black text-amber-300 font-mono" id="timerSeconds">${ex.rest}</div>
+                        <button onclick="skipRest()" class="text-xs bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 px-3 py-1 rounded-lg font-bold">
+                            דלג על מנוחה
+                        </button>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <button onclick="completeSet()" id="completeSetBtn" class="flex-1 py-4 rounded-xl font-extrabold text-slate-950 gradient-btn text-base shadow-lg flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-check"></i> סיימתי סט!
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function completeSet() {
+            const ex = appState.activeWorkout.exercises[appState.currentExerciseIdx];
+            if (appState.currentSet < ex.sets) {
+                appState.currentSet++;
+                startRestTimer(ex.rest);
+            } else {
+                appState.currentExerciseIdx++;
+                appState.currentSet = 1;
+                renderWorkoutStep();
+            }
+        }
+
+        function startRestTimer(seconds) {
+            const timerEl = document.getElementById('restTimerDisplay');
+            const secEl = document.getElementById('timerSeconds');
+            const btn = document.getElementById('completeSetBtn');
+
+            if (!timerEl || !secEl) return;
+
+            timerEl.classList.remove('hidden');
+            if (btn) btn.disabled = true;
+
+            let timeLeft = seconds;
+            secEl.textContent = timeLeft;
+
+            if (appState.restInterval) clearInterval(appState.restInterval);
+
+            appState.restInterval = setInterval(() => {
+                timeLeft--;
+                secEl.textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(appState.restInterval);
+                    timerEl.classList.add('hidden');
+                    if (btn) btn.disabled = false;
+                    renderWorkoutStep();
+                }
+            }, 1000);
+        }
+
+        function skipRest() {
+            if (appState.restInterval) clearInterval(appState.restInterval);
+            const timerEl = document.getElementById('restTimerDisplay');
+            if (timerEl) timerEl.classList.add('hidden');
+            const btn = document.getElementById('completeSetBtn');
+            if (btn) btn.disabled = false;
+            renderWorkoutStep();
+        }
+
+        // Update Stats UI
+        function updateStatsUI() {
+            const pEl = document.getElementById('statMaxPushups');
+            if (pEl) pEl.textContent = appState.user.maxPushups || 0;
+
+            const uEl = document.getElementById('statMaxPullups');
+            if (uEl) uEl.textContent = appState.user.maxPullups || 0;
+
+            const wEl = document.getElementById('statWorkoutsDone');
+            if (wEl) wEl.textContent = appState.user.completedWorkouts || 0;
+
+            const sEl = document.getElementById('statStreak');
+            if (sEl) sEl.textContent = Math.min(appState.user.completedWorkouts || 0, 7);
+        }
+
+        // WhatsApp Share Generator Function for all subjects
+        function shareWhatsApp(type) {
+            let text = "";
+            const siteName = "FitBody Calisthenics";
+
+            if (type === 'program') {
+                text = `💪 *תוכנית האימונים האישית שלי ב-${siteName}!* %0A%0A` +
+                       `🏋️‍♂️ מקסימום שכיבות סמיכה: ${appState.user.maxPushups}%0A` +                       `🤸‍♂️ מקסימום מתח: ${appState.user.maxPullups}%0A` +
+                       `⏱️ מקסימום פלאנק: ${appState.user.maxPlank} שניות%0A` +
+                       `📅 שבוע נוכחי: שבוע ${appState.currentWeek}%0A%0A` +
+                       `הצטרף אלי לאימוני משקל גוף! 🔥`;
+            } else if (type === 'nutrition') {
+                const cal = document.getElementById('nutCalories')?.textContent || "0";
+                const water = document.getElementById('nutWater')?.textContent || "0";
+                const protein = document.getElementById('nutProtein')?.textContent || "0";
+                
+                text = `🥗 *תפריט התזונה והקלוריות שלי ב-${siteName}!* %0A%0A` +
+                       `🔥 קלוריות יומיות: ${cal}%0A` +
+                       `💧 מים ביום: ${water}%0A` +
+                       `🥩 חלבון יומי: ${protein}%0A%0A` +
+                       `שומרים על כושר ותזונה נכונה! 🥑`;
+            } else if (type === 'stats') {
+                text = `📊 *ההתקדמות וההישגים שלי ב-${siteName}!* %0A%0A` +
+                       `⚡ שיא שכיבות סמיכה: ${appState.user.maxPushups}%0A` +
+                       `🏆 שיא מתח: ${appState.user.maxPullups}%0A` +
+                       `✅ אימונים שהושלמו: ${appState.user.completedWorkouts || 0}%0A%0A` +
+                       `עובדים קשה ומגיעים לתוצאות! 💪`;
+            } else if (type === 'workout_done') {
+                const title = appState.activeWorkout ? appState.activeWorkout.title : "אימון יומי";
+                text = `🔥 *סיימתי בהצלחה את ${title} ב-${siteName}!* %0A%0A` +
+                       `עוד צעד בדרך לגוף חזק ובריא יותר! 🏆💪`;
+            }
+
+            const url = `https://api.whatsapp.com/send?text=${text}`;
+            window.open(url, '_blank');
+        }
+
+        // Chart.js Progress Chart Initialization
+        let chartInstance = null;
+        function initChart() {
+            const ctx = document.getElementById('progressChart');
+            if (!ctx) return;
+
+            const history = appState.user.history || [];
+            const labels = history.length > 0 ? history.map(h => h.date) : ['התחלה'];
+            const pushData = history.length > 0 ? history.map(h => h.pushups) : [appState.user.maxPushups];
+            const pullData = history.length > 0 ? history.map(h => h.pullups) : [appState.user.maxPullups];
+
+            if (chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'שכיבות סמיכה',
+                            data: pushData,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.3,
+                            fill: true
+                        },
+                        {
+                            label: 'מתח',
+                            data: pullData,
+                            borderColor: '#06b6d4',
+                            backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                            tension: 0.3,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#94a3b8', font: { family: 'Heebo' } }
+                        }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                    }
+                }
+            });
+        }
+
+        // Initialization on Load
+        window.onload = function() {
+            loadUserData();
+            renderProgram();
+        };
+    </script>
+</body>
+</html>

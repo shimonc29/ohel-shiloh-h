@@ -1,0 +1,10 @@
+<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>מדריך מעיינות ישראל</title><script src="https://cdn.tailwindcss.com"></script><script src="https://unpkg.com/@babel/standalone@7.26.9/babel.min.js"></script><script type="importmap">{"imports":{"react":"https://esm.sh/react@18.3.1","react-dom/client":"https://esm.sh/react-dom@18.3.1/client?external=react","lucide-react":"https://esm.sh/lucide-react@0.468.0?external=react"}}</script><style>body{margin:0;background:#101629;color:white;font-family:Arial,sans-serif}#loading{padding:24px;text-align:center}#err{color:#ff8e8e;white-space:pre-wrap;direction:ltr}</style></head><body><div id="loading">טוען את הפרויקט…</div><div id="root"></div><div id="err"></div><script type="module">
+try{
+const source=await fetch('./02.tsx').then(r=>{if(!r.ok)throw Error('Source file unavailable');return r.text()});
+const code=window.Babel.transform(source,{filename:'app.tsx',presets:[['typescript',{isTSX:true,allExtensions:true}],['react',{runtime:'classic'}]]}).code;
+const url=URL.createObjectURL(new Blob([code],{type:'text/javascript'}));
+const [{default:App},React,ReactDOM]=await Promise.all([import(url),import('react'),import('react-dom/client')]);
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+document.getElementById('loading').remove();
+}catch(e){document.getElementById('loading').textContent='לא ניתן לטעון כרגע את הפרויקט';document.getElementById('err').textContent=String(e);console.error(e)}
+</script></body></html>

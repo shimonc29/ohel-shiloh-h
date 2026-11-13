@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>סימולטור טיסה - DJI Mini 2</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Heebo Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Heebo', 'sans-serif'],
+                    },
+                    colors: {
+                        neon: '#0ea5e9',
+                        hudBg: 'rgba(15, 23, 42, 0.75)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            background-color: #0f172a;
+            font-family: 'Heebo', sans-serif;
+        }
+
+        #webgl-container {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        /* Glassmorphic HUD overlay */
+        .hud-panel {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(14, 165, 233, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        /* On-screen touch joystick controls */
+        .touch-joystick {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(14, 165, 233, 0.5);
+            position: relative;
+            touch-action: none;
+        }
+
+        .touch-stick {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #0ea5e9;
+            position: absolute;
+            top: 38px;
+            left: 38px;
+            box-shadow: 0 0 10px #0ea5e9;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 3D Canvas Rendering Container -->
+    <div id="webgl-container"></div>
+
+    <!-- UI Overlay / HUD Layer -->
+    <div class="relative z-10 w-full h-full flex flex-col justify-between p-4 pointer-events-none">
+
+        <!-- Top Header & Telemetry Status -->
+        <header class="flex justify-between items-start w-full max-w-6xl mx-auto pointer-events-auto">
+            <!-- Brand & Drone Title -->
+            <div class="hud-panel p-3 sm:p-4 rounded-2xl flex items-center gap-3">
+                <div class="bg-sky-500/20 p-2 rounded-xl border border-sky-400/40">
+                    <i class="fa-solid fa-plane-up text-neon text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-white font-extrabold text-lg sm:text-xl leading-tight">סימולטור DJI Mini 2</h1>
+                    <p class="text-xs text-sky-300/80">מצב טיסה חופשי • אימון שליטה</p>
+                </div>
+            </div>
+
+            <!-- Telemetry HUD -->
+            <div class="hud-panel px-4 py-2 rounded-2xl flex items-center gap-4 text-white text-xs sm:text-sm">
+                <!-- Height -->
+                <div class="text-center">
+                    <span class="text-slate-400 block text-[10px]">גובה (ALT)</span>
+                    <span id="hud-alt" class="font-mono text-base font-bold text-sky-400">0.0m</span>
+                </div>
+                <div class="w-px h-6 bg-slate-700"></div>
+                <!-- Speed -->
+                <div class="text-center">
+                    <span class="text-slate-400 block text-[10px]">מהירות (SPD)</span>
+                    <span id="hud-spd" class="font-mono text-base font-bold text-emerald-400">0 km/h</span>
+                </div>
+                <div class="w-px h-6 bg-slate-700"></div>
+                <!-- Battery -->
+                <div class="text-center">
+                    <span class="text-slate-400 block text-[10px]">סוללה</span>
+                    <span id="hud-bat" class="font-mono text-base font-bold text-amber-400">98% <i class="fa-solid fa-battery-three-quarters text-xs"></i></span>
+                </div>
+                <div class="w-px h-6 bg-slate-700"></div>
+                <!-- Checkpoint Score -->
+                <div class="text-center">
+                    <span class="text-slate-400 block text-[10px]">חישוקים</span>
+                    <span id="hud-rings" class="font-mono text-base font-bold text-purple-400">0/5</span>
+                </div>
+            </div>
+
+            <!-- Camera Toggle Button -->
+            <button id="btn-camera" class="hud-panel p-3 rounded-2xl text-white hover:bg-slate-800/80 transition pointer-events-auto flex items-center gap-2">
+                <i class="fa-solid fa-video text-neon"></i>
+                <span class="hidden sm:inline text-xs font-semibold">מצלמה (C)</span>
+            </button>
+        </header>
+
+        <!-- Notification Banner / Instructions -->
+        <div id="instruction-box" class="self-center hud-panel px-6 py-3 rounded-full text-white text-xs sm:text-sm text-center border-sky-500/40 animate-pulse pointer-events-auto">
+            💡 <b>מקשי מקלדת:</b> W/S (עילוי/הנמכה) • A/D (פנייה) • מקשי חיצים (קדימה/אחור/צדדים) • R (איפוס)
+        </div>
+
+        <!-- Bottom Controls & Reset Button -->
+        <footer class="flex justify-between items-end w-full max-w-6xl mx-auto pb-2">
+            <!-- Left Mobile Joystick (Altitude & Yaw) -->
+            <div id="joystick-left" class="touch-joystick pointer-events-auto sm:hidden">
+                <div id="stick-left" class="touch-stick"></div>
+            </div>
+
+            <!-- Instructions Toggle / Reset -->
+            <div class="flex gap-2 pointer-events-auto">
+                <button id="btn-reset" class="hud-panel px-4 py-2 rounded-xl text-white hover:bg-rose-900/50 hover:border-rose-500/50 transition text-xs font-semibold flex items-center gap-2">
+                    <i class="fa-solid fa-rotate-left text-rose-400"></i>
+                    איפוס מיקום (R)
+                </button>
+            </div>
+
+            <!-- Right Mobile Joystick (Pitch & Roll) -->
+            <div id="joystick-right" class="touch-joystick pointer-events-auto sm:hidden">
+                <div id="stick-right" class="touch-stick"></div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Main Logic Script -->
+    <script>
+        // --- 1. GAME & SCENE SETUP ---
+        let scene, camera, renderer;
+        let droneGroup, props = [];
+        let cameraMode = 'third'; // 'third' or 'fpv'
+        
+        // World Objects
+        let rings = [];
+        let ringsCollected = 0;
+
+        // Physics & Controls State
+        const keys = {};
+        const droneState = {
+            position: new THREE.Vector3(0, 1.2, 0),
+            velocity: new THREE.Vector3(0, 0, 0),
+            rotation: new THREE.Euler(0, 0, 0, 'YXZ'),
+            yaw: 0,
+            pitch: 0,
+            roll: 0,
+            speed: 0,
+            battery: 98
+        };
+
+        // Touch Joysticks State
+        const touchState = {
+            leftX: 0,  // Yaw
+            leftY: 0,  // Throttle
+            rightX: 0, // Roll
+            rightY: 0  // Pitch
+        };
+
+        // --- 2. INITIALIZATION ---
+        function init() {
+            const container = document.getElementById('webgl-container');
+
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0b132b);
+            scene.fog = new THREE.FogExp2(0x0b132b, 0.008);
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
+
+            // Lights
+            setupLights();
+
+            // Environment & Terrain
+            buildEnvironment();
+
+            // Create Mini 2 Drone Model
+            createDrone();
+
+            // Create Checkpoint Rings
+            createCheckpoints();
+
+            // Event Listeners
+            setupEvents();
+
+            // Battery drain loop
+            setInterval(() => {
+                if (droneState.position.y > 0.5 && droneState.battery > 0) {
+                    droneState.battery = Math.max(0, droneState.battery - 0.05);
+                    document.getElementById('hud-bat').innerHTML = `${Math.round(droneState.battery)}% <i class="fa-solid fa-battery-three-quarters text-xs"></i>`;
+                }
+            }, 2000);
+
+            // Start Animation Loop
+            animate();
+        }
+
+        // --- 3. LIGHTING ---
+        function setupLights() {
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+            scene.add(ambientLight);
+
+            const sun = new THREE.DirectionalLight(0xfffaed, 0.9);
+            sun.position.set(50, 100, 30);
+            sun.castShadow = true;
+            sun.shadow.mapSize.width = 2048;
+            sun.shadow.mapSize.height = 2048;
+            sun.shadow.camera.near = 0.5;
+            sun.shadow.camera.far = 300;
+            const d = 60;
+            sun.shadow.camera.left = -d;
+            sun.shadow.camera.right = d;
+            sun.shadow.camera.top = d;
+            sun.shadow.camera.bottom = -d;
+            scene.add(sun);
+
+            // Soft blue fill light
+            const fillLight = new THREE.DirectionalLight(0x38bdf8, 0.3);
+            fillLight.position.set(-50, 20, -50);
+            scene.add(fillLight);
+        }
+
+        // --- 4. ENVIRONMENT CREATION ---
+        function buildEnvironment() {
+            // Ground Grid
+            const groundGeo = new THREE.PlaneGeometry(500, 500, 40, 40);
+            const groundMat = new THREE.MeshStandardMaterial({
+                color: 0x1e293b,
+                roughness: 0.8,
+                metalness: 0.2,
+            });
+            const ground = new THREE.Mesh(groundGeo, groundMat);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            // Grid Helper overlay for futuristic pilot feel
+            const grid = new THREE.GridHelper(500, 100, 0x0ea5e9, 0x334155);
+            grid.position.y = 0.02;
+            scene.add(grid);
+
+            // Helipad Landing Zone
+            const padGeo = new THREE.CylinderGeometry(4, 4, 0.1, 32);
+            const padMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.4 });
+            const pad = new THREE.Mesh(padGeo, padMat);
+            pad.position.set(0, 0.05, 0);
+            pad.receiveShadow = true;
+            scene.add(pad);
+
+            // Helipad 'H' Marking
+            const hGeo = new THREE.BoxGeometry(0.6, 0.02, 2.5);
+            const hMat = new THREE.MeshBasicMaterial({ color: 0x0ea5e9 });
+            const hBar1 = new THREE.Mesh(hGeo, hMat);
+            hBar1.position.set(-1, 0.11, 0);
+            const hBar2 = new THREE.Mesh(hGeo, hMat);
+            hBar2.position.set(1, 0.11, 0);
+            const hCrossGeo = new THREE.BoxGeometry(2, 0.02, 0.6);
+            const hCross = new THREE.Mesh(hCrossGeo, hMat);
+            hCross.position.set(0, 0.11, 0);
+            pad.add(hBar1, hBar2, hCross);
+
+            // Add Trees & Buildings for obstacle navigation
+            const treeGeo = new THREE.ConeGeometry(2, 8, 6);
+            const trunkGeo = new THREE.CylinderGeometry(0.4, 0.5, 2);
+            const leavesMat = new THREE.MeshStandardMaterial({ color: 0x059669, roughness: 0.9 });
+            const trunkMat = new THREE.MeshStandardMaterial({ color: 0x78350f });
+
+            for (let i = 0; i < 40; i++) {
+                const x = (Math.random() - 0.5) * 300;
+                const z = (Math.random() - 0.5) * 300;
+                if (Math.hypot(x, z) < 15) continue; // Keep landing area clear
+
+                const tree = new THREE.Group();
+                const leaves = new THREE.Mesh(treeGeo, leavesMat);
+                leaves.position.y = 5;
+                leaves.castShadow = true;
+
+                const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+                trunk.position.y = 1;
+                trunk.castShadow = true;
+
+                tree.add(leaves, trunk);
+                tree.position.set(x, 0, z);
+                scene.add(tree);
+            }
+
+            // Decorative Modern Buildings
+            for (let i = 0; i < 12; i++) {
+                const h = 15 + Math.random() * 25;
+                const w = 8 + Math.random() * 8;
+                const bGeo = new THREE.BoxGeometry(w, h, w);
+                const bMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.3, metalness: 0.5 });
+                const b = new THREE.Mesh(bGeo, bMat);
+
+                const angle = (i / 12) * Math.PI * 2;
+                const radius = 70 + Math.random() * 40;
+                b.position.set(Math.cos(angle) * radius, h / 2, Math.sin(angle) * radius);
+                b.castShadow = true;
+                b.receiveShadow = true;
+                scene.add(b);
+            }
+        }
+
+        // --- 5. MINI 2 DRONE PROCEDURAL MODEL ---
+        function createDrone() {
+            droneGroup = new THREE.Group();
+
+            // Main Body (Light Grey Aerodynamic Chassis)
+            const bodyGeo = new THREE.BoxGeometry(0.8, 0.25, 1.2);
+            // Chamfer-like bevel appearance using scale
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.3, metalness: 0.1 });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.castShadow = true;
+            droneGroup.add(body);
+
+            // Front Gimbal Camera (Mini 2 Signature Camera Lens)
+            const cameraHousing = new THREE.Mesh(
+                new THREE.BoxGeometry(0.35, 0.25, 0.35),
+                new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.2 })
+            );
+            cameraHousing.position.set(0, -0.05, -0.65);
+            
+            const lens = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.1, 0.1, 0.1, 16),
+                new THREE.MeshStandardMaterial({ color: 0x0ea5e9, roughness: 0.1, metalness: 0.9 })
+            );
+            lens.rotation.x = Math.PI / 2;
+            lens.position.set(0, 0, -0.18);
+            cameraHousing.add(lens);
+            droneGroup.add(cameraHousing);
+
+            // 4 Folding Arms & Motors
+            const armPositions = [
+                { x: 0.7, z: -0.7, angle: Math.PI / 4 },   // Front Right
+                { x: -0.7, z: -0.7, angle: -Math.PI / 4 }, // Front Left
+                { x: 0.8, z: 0.7, angle: -Math.PI / 4 },   // Back Right
+                { x: -0.8, z: 0.7, angle: Math.PI / 4 }    // Back Left
+            ];
+
+            const armMat = new THREE.MeshStandardMaterial({ color: 0xc0c6d0 });
+            const motorMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.8 });
+            const propMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, transparent: true, opacity: 0.7 });
+
+            armPositions.forEach((pos, idx) => {
+                // Arm
+                const arm = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 0.8), armMat);
+                arm.position.set(pos.x / 2, 0, pos.z / 2);
+                arm.rotation.y = pos.angle;
+                arm.castShadow = true;
+                droneGroup.add(arm);
+
+                // Motor Hub
+                const motor = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.18, 16), motorMat);
+                motor.position.set(pos.x, 0.08, pos.z);
+                droneGroup.add(motor);
+
+                // LED Lights (Front Green / Rear Red)
+                const ledColor = pos.z < 0 ? 0x22c55e : 0xef4444;
+                const ledMat = new THREE.MeshBasicMaterial({ color: ledColor });
+                const led = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 8), ledMat);
+                led.position.set(pos.x, -0.08, pos.z);
+                droneGroup.add(led);
+
+                // Propeller Rotor Blades (2 blades per motor)
+                const propGroup = new THREE.Group();
+                const blade1 = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.01, 0.08), propMat);
+                const blade2 = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.01, 0.8), propMat);
+                propGroup.add(blade1, blade2);
+                propGroup.position.set(pos.x, 0.18, pos.z);
+                
+                droneGroup.add(propGroup);
+                props.push(propGroup); // Save reference for spin animation
+            });
+
+            droneGroup.position.copy(droneState.position);
+            scene.add(droneGroup);
+        }
+
+        // --- 6. CHECKPOINT RINGS ---
+        function createCheckpoints() {
+            const ringPositions = [
+                { x: 0, y: 5, z: -25 },
+                { x: 20, y: 8, z: -60 },
+                { x: -15, y: 12, z: -100 },
+                { x: -40, y: 7, z: -50 },
+                { x: 0, y: 4, z: -10 }
+            ];
+
+            const ringGeo = new THREE.TorusGeometry(3.5, 0.25, 16, 32);
+            const ringMat = new THREE.MeshStandardMaterial({ 
+                color: 0x0ea5e9, 
+                emissive: 0x0284c7, 
+                emissiveIntensity: 0.6,
+                roughness: 0.2 
+            });
+
+            ringPositions.forEach((pos, idx) => {
+                const ring = new THREE.Mesh(ringGeo, ringMat.clone());
+                ring.position.set(pos.x, pos.y, pos.z);
+                ring.userData = { id: idx, collected: false };
+                scene.add(ring);
+                rings.push(ring);
+            });
+        }
+
+        // --- 7. INPUT & CONTROLS SETUP ---
+        function setupEvents() {
+            // Keyboard Handlers
+            window.addEventListener('keydown', (e) => {
+                keys[e.code] = true;
+                if (e.code === 'KeyC') toggleCamera();
+                if (e.code === 'KeyR') resetDrone();
+            });
+
+            window.addEventListener('keyup', (e) => {
+                keys[e.code] = false;
+            });
+
+            // Window Resize
+            window.addEventListener('resize', onWindowResize);
+
+            // Buttons
+            document.getElementById('btn-camera').addEventListener('click', toggleCamera);
+            document.getElementById('btn-reset').addEventListener('click', resetDrone);
+
+            // Touch Joysticks Setup
+            setupTouchJoystick('joystick-left', 'stick-left', (x, y) => {
+                touchState.leftX = x; // Yaw
+                touchState.leftY = -y; // Throttle (Up is positive)
+            });
+
+            setupTouchJoystick('joystick-right', 'stick-right', (x, y) => {
+                touchState.rightX = x; // Roll
+                touchState.rightY = -y; // Pitch
+            });
+        }
+
+        function setupTouchJoystick(containerId, stickId, onChange) {
+            const container = document.getElementById(containerId);
+            const stick = document.getElementById(stickId);
+            let activeTouchId = null;
+            const maxRadius = 40;
+
+            const handleTouch = (e) => {
+                e.preventDefault();
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    const touch = e.changedTouches[i];
+                    if (activeTouchId === null) activeTouchId = touch.identifier;
+
+                    if (touch.identifier === activeTouchId) {
+                        const rect = container.getBoundingClientRect();
+                        const centerX = rect.left + rect.width / 2;
+                        const centerY = rect.top + rect.height / 2;
+
+                        let dx = touch.clientX - centerX;
+                        let dy = touch.clientY - centerY;
+                        const dist = Math.hypot(dx, dy);
+
+                        if (dist > maxRadius) {
+                            dx = (dx / dist) * maxRadius;
+                            dy = (dy / dist) * maxRadius;
+                        }
+
+                        stick.style.transform = `translate(${dx}px, ${dy}px)`;
+                        onChange(dx / maxRadius, dy / maxRadius);
+                    }
+                }
+            };
+
+            const handleEnd = (e) => {
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    if (e.changedTouches[i].identifier === activeTouchId) {
+                        activeTouchId = null;
+                        stick.style.transform = `translate(0px, 0px)`;
+                        onChange(0, 0);
+                    }
+                }
+            };
+
+            container.addEventListener('touchstart', handleTouch, { passive: false });
+            container.addEventListener('touchmove', handleTouch, { passive: false });
+            container.addEventListener('touchend', handleEnd);
+            container.addEventListener('touchcancel', handleEnd);
+        }
+
+        function toggleCamera() {
+            cameraMode = cameraMode === 'third' ? 'fpv' : 'third';
+        }
+
+        function resetDrone() {
+            droneState.position.set(0, 1.2, 0);
+            droneState.velocity.set(0, 0, 0);
+            droneState.yaw = 0;
+            droneState.pitch = 0;
+            droneState.roll = 0;
+            droneGroup.rotation.set(0, 0, 0);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // --- 8. PHYSICS & FLIGHT DYNAMICS LOOP ---
+        function updatePhysics() {
+            if (droneState.battery <= 0) return;
+
+            // Input values (-1 to 1)
+            let inputThrottle = 0;
+            let inputYaw = 0;
+            let inputPitch = 0;
+            let inputRoll = 0;
+
+            // Keyboard inputs mapping (Standard Mode 2 Drone Controls)
+            if (keys['KeyW']) inputThrottle += 1;
+            if (keys['KeyS']) inputThrottle -= 1;
+            if (keys['KeyA']) inputYaw += 1;
+            if (keys['KeyD']) inputYaw -= 1;
+
+            if (keys['ArrowUp']) inputPitch += 1;
+            if (keys['ArrowDown']) inputPitch -= 1;
+            if (keys['ArrowLeft']) inputRoll -= 1;
+            if (keys['ArrowRight']) inputRoll += 1;
+
+            // Combine keyboard with touch controls
+            inputYaw = Math.max(-1, Math.min(1, inputYaw + touchState.leftX));
+            inputThrottle = Math.max(-1, Math.min(1, inputThrottle + touchState.leftY));
+            inputRoll = Math.max(-1, Math.min(1, inputRoll + touchState.rightX));
+            inputPitch = Math.max(-1, Math.min(1, inputPitch + touchState.rightY));
+
+            // Yaw Angle Update
+            droneState.yaw += inputYaw * 0.035;
+
+            // Target tilt angles (Visual & Motion Physics)
+            const targetPitch = inputPitch * 0.35; // Tilt forward/backward
+            const targetRoll = -inputRoll * 0.35;  // Tilt sides
+
+            // Smoothly interpolate tilt (Pitch & Roll responsiveness)
+            droneState.pitch += (targetPitch - droneState.pitch) * 0.1;
+            droneState.roll += (targetRoll - droneState.roll) * 0.1;
+
+            // Calculate directional vectors based on Yaw
+            const forwardVector = new THREE.Vector3(
+                -Math.sin(droneState.yaw),
+                0,
+                -Math.cos(droneState.yaw)
+            );
+            const sideVector = new THREE.Vector3(
+                Math.cos(droneState.yaw),
+                0,
+                -Math.sin(droneState.yaw)
+            );
+
+            // Compute Forces
+            const accel = new THREE.Vector3(0, 0, 0);
+
+            // Vertical Lift Force
+            const liftForce = (inputThrottle * 12.0); // Power factor
+            accel.y += liftForce - 9.81; // Lift minus Gravity
+
+            // Horizontal Thrust Forces
+            const forwardThrust = inputPitch * 14.0;
+            const sideThrust = inputRoll * 14.0;
+
+            accel.addScaledVector(forwardVector, forwardThrust);
+            accel.addScaledVector(sideVector, sideThrust);
+
+            // Apply Acceleration to Velocity
+            droneState.velocity.addScaledVector(accel, 0.016); // ~60fps delta time
+
+            // Air Resistance / Damping (Stabilization system)
+            droneState.velocity.x *= 0.95;
+            droneState.velocity.z *= 0.95;
+            droneState.velocity.y *= 0.92;
+
+            // Update Drone Position
+            droneState.position.addScaledVector(droneState.velocity, 0.016);
+
+            // Ground Collision Guard
+            if (droneState.position.y < 0.25) {
+                droneState.position.y = 0.25;
+                droneState.velocity.y = Math.max(0, droneState.velocity.y);
+                droneState.pitch *= 0.5;
+                droneState.roll *= 0.5;
+            }
+
+            // Apply Position & Rotations to 3D Mesh
+            droneGroup.position.copy(droneState.position);
+            
+            // Combine Rotations (Yaw -> Pitch -> Roll order)
+            const euler = new THREE.Euler(droneState.pitch, droneState.yaw, droneState.roll, 'YXZ');
+            droneGroup.quaternion.setFromEuler(euler);
+
+            // Spin Propellers if motors are active / floating
+            if (droneState.position.y > 0.3 || inputThrottle > 0) {
+                props.forEach(prop => prop.rotation.y += 0.8);
+            }
+
+            // Check Checkpoint ring collisions
+            checkCheckpoints();
+
+            // Update Telemetry UI
+            const speedKmh = Math.round(droneState.velocity.length() * 3.6);
+            document.getElementById('hud-alt').innerText = `${droneState.position.y.toFixed(1)}m`;
+            document.getElementById('hud-spd').innerText = `${speedKmh} km/h`;
+        }
+
+        // --- 9. CHECKPOINT DETECTOR ---
+        function checkCheckpoints() {
+            rings.forEach(ring => {
+                if (!ring.userData.collected) {
+                    const dist = droneState.position.distanceTo(ring.position);
+                    if (dist < 4.0) {
+                        ring.userData.collected = true;
+                        ring.material.color.setHex(0x10b981); // Turn green
+                        ring.material.emissive.setHex(0x059669);
+                        ringsCollected++;
+                        document.getElementById('hud-rings').innerText = `${ringsCollected}/${rings.length}`;
+                        
+                        // Particle effect pulse
+                        ring.scale.set(1.3, 1.3, 1.3);
+                        setTimeout(() => ring.scale.set(1, 1, 1), 300);
+                    }
+                }
+            });
+        }
+
+        // --- 10. CAMERA CONTROLLER ---
+        function updateCamera() {
+            if (cameraMode === 'third') {
+                // Smooth Chase Camera Behind Drone
+                const offset = new THREE.Vector3(0, 1.8, 4.5);
+                offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), droneState.yaw);
+                
+                const targetCamPos = droneState.position.clone().add(offset);
+                camera.position.lerp(targetCamPos, 0.1);
+
+                const lookAtTarget = droneState.position.clone().add(new THREE.Vector3(0, 0.5, 0));
+                camera.lookAt(lookAtTarget);
+                droneGroup.visible = true;
+            } else {
+                // FPV Mode (Front Gimbal Lens Perspective)
+                const fpvOffset = new THREE.Vector3(0, 0, -0.65);
+                fpvOffset.applyEuler(droneGroup.rotation);
+                
+                camera.position.copy(droneState.position.clone().add(fpvOffset));
+
+                const fpvLook = new THREE.Vector3(0, 0, -10);
+                fpvLook.applyEuler(droneGroup.rotation);
+                fpvLook.add(camera.position);
+                
+                camera.lookAt(fpvLook);
+                droneGroup.visible = false; // Hide body in FPV to prevent clipping
+            }
+        }
+
+        // --- 11. ANIMATION LOOP ---
+        function animate() {
+            requestAnimationFrame(animate);
+            updatePhysics();
+            updateCamera();
+            renderer.render(scene, camera);
+        }
+
+        // Start Simulator on Window Load
+        window.onload = init;
+    </script>
+</body>
+</html>

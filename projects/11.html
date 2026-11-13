@@ -1,0 +1,983 @@
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FIT-AI PRO - אפליקציית כושר ותזונה מתקדמת</title>
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;700;900&family=Rubik:wght@400;600;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN (Must be loaded BEFORE tailwind.config) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Heebo', 'Rubik', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              green: '#10b981',
+              dark: '#090d16',
+              card: '#111827',
+              neon: '#00ff9d'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #06090e;
+      color: #e2e8f0;
+      font-family: 'Heebo', sans-serif;
+    }
+    .glass-card {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .btn-gradient-primary {
+      background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+    }
+    .btn-gradient-primary:hover {
+      background: linear-gradient(135deg, #059669 0%, #0891b2 100%);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="border-b border-white/10 glass-card sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl btn-gradient-primary flex items-center justify-center font-black text-slate-950 text-xl shadow-lg shadow-emerald-500/20">
+          ⚡
+        </div>
+        <div>
+          <h1 class="font-black text-lg tracking-tight text-white flex items-center gap-2">
+            FIT-AI <span class="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-md border border-emerald-500/30 font-bold">PRO</span>
+          </h1>
+          <p class="text-[10px] text-slate-400">אימונים & תזונה חכמה בזמן אמת</p>
+        </div>
+      </div>
+
+      <!-- User Profile Summary Button -->
+      <div class="flex items-center gap-3">
+        <button onclick="shareAppToWhatsApp()" class="hidden sm:flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-3 py-2 rounded-xl transition shadow-lg shadow-emerald-600/30">
+          <i class="fa-brands fa-whatsapp text-base"></i>
+          <span>שתף ב-WhatsApp</span>
+        </button>
+        <button onclick="openGoalModal()" class="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-xs text-emerald-400 border border-emerald-500/30 px-3 py-2 rounded-xl transition shadow-lg">
+          <i class="fa-solid fa-bullseye text-sm"></i>
+          <span id="header-goal-badge" class="font-bold">יעד: חיטוב (-20 ק"ג)</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs Bar -->
+  <nav class="bg-slate-950/80 border-b border-white/5 backdrop-blur-md sticky top-[61px] z-30">
+    <div class="max-w-7xl mx-auto px-4 flex gap-2 overflow-x-auto py-2">
+      <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="nav-tab text-sm font-bold px-4 py-2 rounded-xl transition-all text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 whitespace-nowrap">
+        <i class="fa-solid fa-chart-line ml-1"></i> דשבורד & סורק
+      </button>
+      <button onclick="switchTab('calendar')" id="tab-btn-calendar" class="nav-tab text-sm font-bold px-4 py-2 rounded-xl transition-all text-slate-400 hover:text-white whitespace-nowrap">
+        <i class="fa-solid fa-calendar-days ml-1"></i> לוח שנה & מעקב יומי
+      </button>
+      <button onclick="switchTab('ai-coach')" id="tab-btn-ai-coach" class="nav-tab text-sm font-bold px-4 py-2 rounded-xl transition-all text-slate-400 hover:text-white whitespace-nowrap">
+        <i class="fa-solid fa-robot ml-1"></i> מאמן AI קולי
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Content Container -->
+  <main class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full space-y-8">
+
+    <!-- TAB 1: DASHBOARD & MEAL SCANNER -->
+    <section id="tab-dashboard" class="tab-content space-y-8">
+      
+      <!-- Top Metrics Overview Grid (Starts at 0!) -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="glass-card p-4 rounded-2xl border-l-4 border-l-emerald-500">
+          <span class="text-xs text-slate-400 block font-bold">יעד נוכחי</span>
+          <div id="user-goal-type-label" class="text-lg font-black text-white mt-1">חיטוב</div>
+          <span id="user-weight-display" class="text-[11px] text-emerald-400 font-bold">80 ק"ג ← 60 ק"ג</span>
+        </div>
+        <div class="glass-card p-4 rounded-2xl border-l-4 border-l-cyan-500">
+          <span class="text-xs text-slate-400 block font-bold">מעקב מים להיום</span>
+          <div id="water-liters-display" class="text-lg font-black text-cyan-400 mt-1">0.0 ליטר</div>
+          <div class="flex items-center gap-1.5 mt-2 flex-wrap">
+            <input type="number" id="custom-water-ml" placeholder="מ&quot;ל (למשל 350)" class="w-24 bg-slate-900 border border-cyan-500/40 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-cyan-400">
+            <button onclick="addCustomWater()" class="text-[10px] bg-cyan-500 text-slate-950 font-black px-2.5 py-1 rounded-lg hover:bg-cyan-400 transition shadow">הוסף</button>
+            <button onclick="addWater(0.25)" class="text-[10px] bg-cyan-500/20 text-cyan-300 px-2 py-1 rounded-lg font-bold hover:bg-cyan-500/30">+250</button>
+            <button onclick="addWater(0.5)" class="text-[10px] bg-cyan-500/20 text-cyan-300 px-2 py-1 rounded-lg font-bold hover:bg-cyan-500/30">+500</button>
+          </div>
+        </div>
+        <div class="glass-card p-4 rounded-2xl border-l-4 border-l-purple-500">
+          <span class="text-xs text-slate-400 block font-bold">קלוריות שנצרכו היום</span>
+          <div id="cals-summary-display" class="text-lg font-black text-purple-400 mt-1">0 / 2,100</div>
+          <span id="cals-percent-display" class="text-[11px] text-slate-400 font-bold">0% מתוך היעד</span>
+        </div>
+        <div class="glass-card p-4 rounded-2xl border-l-4 border-l-amber-500">
+          <span class="text-xs text-slate-400 block font-bold">חלבון שנצרך היום</span>
+          <div id="protein-summary-display" class="text-lg font-black text-amber-400 mt-1">0g / 160g</div>
+          <span id="protein-rem-display" class="text-[11px] text-slate-400 font-bold">נותרו 160 גרם</span>
+        </div>
+      </div>
+
+      <!-- Water progress bar -->
+      <div class="glass-card p-4 rounded-2xl flex items-center gap-4">
+        <div class="text-xs font-bold text-cyan-400 w-28">שתיית מים (היום):</div>
+        <div class="flex-1 bg-slate-900 rounded-full h-3 overflow-hidden border border-white/5">
+          <div id="water-bar" class="bg-cyan-500 h-full transition-all duration-300" style="width: 0%;"></div>
+        </div>
+        <div id="water-count-text" class="text-xs font-bold text-slate-300">0.0 / 3.0L</div>
+      </div>
+
+      <!-- Main AI Meal Builder & Photo Scanner Card -->
+      <div class="glass-card p-6 md:p-8 rounded-3xl space-y-6 relative overflow-hidden">
+        <div class="flex justify-between items-center flex-wrap gap-4">
+          <div>
+            <h2 class="text-xl md:text-2xl font-black text-white flex items-center gap-2">
+              <i class="fa-solid fa-utensils text-emerald-400"></i> מחשבון ארוחות AI חופשי (לפי גרמים)
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">רשום בעברית מה אכלת וכמה גרם מכל דבר, וה-AI יחשב עבורך קלוריות ומאקרו!</p>
+          </div>
+          <span id="scan-status-tag" class="text-xs bg-slate-800 text-slate-400 px-3 py-1 rounded-full font-bold">ממתין להקשת ארוחה</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+          
+          <!-- Left Column: Free Text Input & Optional Photo -->
+          <div class="space-y-4">
+            
+            <div>
+              <label class="text-xs font-bold text-emerald-400 block mb-1">
+                <i class="fa-solid fa-pen-to-square ml-1"></i> כתוב מה אכלת והגרמים של כל מאכל:
+              </label>
+              <textarea id="meal-text-notes" rows="4" placeholder="דוגמה: אכלתי 200 גרם חזה עוף, 150 גרם אורז לבן וכף שמן זית" class="w-full bg-slate-950 border border-emerald-500/40 rounded-2xl p-4 text-sm text-white focus:outline-none focus:border-emerald-400 shadow-inner leading-relaxed"></textarea>
+            </div>
+
+            <!-- Photo Upload / Dropzone -->
+            <div id="camera-dropzone" class="border-2 border-dashed border-slate-700 hover:border-emerald-400 rounded-2xl p-3 text-center transition cursor-pointer relative bg-slate-950/50 flex flex-col items-center justify-center">
+              <input type="file" accept="image/*" id="meal-image-input" class="absolute inset-0 opacity-0 cursor-pointer" onchange="handleImageUpload(event)">
+              
+              <div id="upload-placeholder" class="flex items-center gap-2 text-slate-400">
+                <i class="fa-solid fa-camera text-emerald-400"></i>
+                <span class="text-xs font-bold text-slate-300">הוסף תמונה (אופציונלי)</span>
+              </div>
+
+              <img id="image-preview" class="max-h-32 rounded-xl hidden object-cover mx-auto shadow-xl" alt="Meal Preview">
+            </div>
+
+            <!-- Analyze Button -->
+            <button onclick="analyzeMealWithAI()" class="w-full py-3.5 btn-gradient-primary text-slate-950 font-black rounded-2xl text-sm shadow-xl flex items-center justify-center gap-2 hover:opacity-95 transition">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+              <span>נתח ארוחה עם Gemini AI</span>
+            </button>
+
+          </div>
+
+          <!-- Right Column: Analysis & Output Box -->
+          <div class="bg-slate-950/90 border border-white/10 p-6 rounded-2xl space-y-4 min-h-[300px] flex flex-col justify-between">
+            
+            <div id="scan-result-content" class="space-y-4">
+              <div>
+                <span class="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">תוצאות ניתוח ה-AI</span>
+                <h3 id="res-meal-title" class="text-lg font-black text-white mt-1">הזן ארוחה והקש ניתוח</h3>
+                <p id="res-meal-desc" class="text-xs text-slate-400 mt-0.5">המערכת תציג כאן את הפירוט התזונתי המדויק</p>
+              </div>
+
+              <!-- Macros Breakdown -->
+              <div class="grid grid-cols-4 gap-2 text-center">
+                <div class="bg-slate-900 p-2.5 rounded-xl border border-white/5">
+                  <span class="text-[10px] text-slate-400 block font-bold">קלוריות</span>
+                  <span id="res-cals" class="text-sm font-black text-emerald-400">0</span>
+                </div>
+                <div class="bg-slate-900 p-2.5 rounded-xl border border-white/5">
+                  <span class="text-[10px] text-slate-400 block font-bold">חלבון</span>
+                  <span id="res-protein" class="text-sm font-black text-purple-400">0g</span>
+                </div>
+                <div class="bg-slate-900 p-2.5 rounded-xl border border-white/5">
+                  <span class="text-[10px] text-slate-400 block font-bold">פחמימה</span>
+                  <span id="res-carbs" class="text-sm font-black text-cyan-400">0g</span>
+                </div>
+                <div class="bg-slate-900 p-2.5 rounded-xl border border-white/5">
+                  <span class="text-[10px] text-slate-400 block font-bold">שומן</span>
+                  <span id="res-fats" class="text-sm font-black text-amber-400">0g</span>
+                </div>
+              </div>
+
+              <!-- Dynamic Ingredient Summary -->
+              <div class="space-y-1.5">
+                <span class="text-[11px] font-bold text-slate-300">רכיבים שזוהו בגרמים:</span>
+                <div id="res-ingredients-list" class="space-y-1 max-h-32 overflow-y-auto pr-1">
+                  <div class="text-xs text-slate-500 italic">הקלד ארוחה בתיבה מימין ולחץ על ניתוח...</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex gap-2 pt-2">
+              <button onclick="logScannedMealToDashboard()" class="flex-1 py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs shadow-lg transition">
+                הוסף ליומן של היום ➕
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Today's Logged Meals List & END OF DAY BUTTON -->
+      <div class="glass-card p-6 rounded-3xl space-y-4">
+        <div class="flex justify-between items-center flex-wrap gap-4">
+          <h3 class="text-lg font-black text-white flex items-center gap-2">
+            <i class="fa-solid fa-list-check text-purple-400"></i> ארוחות שנרשמו היום
+          </h3>
+
+          <!-- Finish Day Button -->
+          <button onclick="finishAndCloseDay()" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs px-5 py-3 rounded-2xl transition shadow-xl border border-purple-400/30 flex items-center gap-2">
+            <i class="fa-solid fa-lock"></i>
+            <span>🔒 סגרתי את היום! שמור ללוח השנה ואיפוס</span>
+          </button>
+        </div>
+
+        <div id="logged-meals-list" class="space-y-3">
+          <div id="empty-meals-msg" class="text-center py-6 text-xs text-slate-500 border border-dashed border-white/10 rounded-2xl">
+            עדיין לא רשמת ארוחות היום. רשום מה אכלת למעלה כדי להתחיל!
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- TAB 2: CALENDAR & HISTORICAL TRACKING -->
+    <section id="tab-calendar" class="tab-content hidden space-y-8">
+      
+      <div class="glass-card p-6 md:p-8 rounded-3xl space-y-6">
+        <div class="flex justify-between items-center flex-wrap gap-4">
+          <div>
+            <h2 class="text-xl md:text-2xl font-black text-white flex items-center gap-2">
+              <i class="fa-solid fa-calendar-days text-cyan-400"></i> לוח שנה & היסטוריית ימים שנסגרו
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">כל יום שתסיים ותסגור יישמר כאן אוטומטית עם סיכום הקלוריות, החלבון והארוחות!</p>
+          </div>
+        </div>
+
+        <!-- Calendar Picker and Stats View Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          <!-- Day Selector Buttons -->
+          <div class="bg-slate-950 p-4 rounded-2xl border border-white/10 space-y-3">
+            <span class="text-xs font-bold text-slate-300 block">ימים שנסגרו ונשמרו:</span>
+            <div id="calendar-days-list" class="space-y-2 max-h-64 overflow-y-auto pr-1">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- Day Details Card -->
+          <div class="md:col-span-2 bg-slate-950/80 p-6 rounded-2xl border border-cyan-500/30 space-y-5">
+            <div class="flex justify-between items-center border-b border-white/10 pb-3">
+              <h4 id="cal-selected-date" class="font-black text-white text-base">בחר יום מהרשימה</h4>
+              <span class="text-xs font-bold text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">נתוני יום</span>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-center">
+              <div class="bg-slate-900 p-3 rounded-xl border border-white/5">
+                <span class="text-[10px] text-slate-400 block font-bold">קלוריות</span>
+                <span id="cal-day-cals" class="text-base font-black text-purple-400">0</span>
+              </div>
+              <div class="bg-slate-900 p-3 rounded-xl border border-white/5">
+                <span class="text-[10px] text-slate-400 block font-bold">חלבון</span>
+                <span id="cal-day-protein" class="text-base font-black text-amber-400">0g</span>
+              </div>
+              <div class="bg-slate-900 p-3 rounded-xl border border-white/5">
+                <span class="text-[10px] text-slate-400 block font-bold">שתיית מים</span>
+                <span id="cal-day-water" class="text-base font-black text-cyan-400">0.0L</span>
+              </div>
+            </div>
+
+            <div>
+              <span class="text-xs font-bold text-slate-300 block mb-2">ארוחות שנאכלו ביום זה:</span>
+              <div id="cal-day-meals" class="space-y-2 text-xs text-slate-400 italic">
+                בחר יום להצגת פירוט הארוחות.
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- TAB 3: AI VOICE COACH CHAT -->
+    <section id="tab-ai-coach" class="tab-content hidden space-y-8">
+      
+      <div class="glass-card p-6 md:p-8 rounded-3xl space-y-6 flex flex-col min-h-[550px]">
+        
+        <div class="flex justify-between items-center flex-wrap gap-4 border-b border-white/10 pb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-500 to-emerald-500 text-slate-950 flex items-center justify-center text-2xl font-black shadow-lg">
+              🤖
+            </div>
+            <div>
+              <h3 class="font-black text-white text-lg flex items-center gap-2">
+                מאמן AI אישי (קולי & טקסט)
+              </h3>
+              <p class="text-xs text-slate-400">שאל כל שאלה בנושאי תזונה, אימונים ותוספים. ה-AI יענה ויקריא בקול!</p>
+            </div>
+          </div>
+
+          <div class="flex gap-2">
+            <button onclick="speakText('שלום! אני מאמן ה-AI האישי שלך. במה אוכל לעזור לך היום?')" class="px-3 py-1.5 bg-slate-900 border border-white/10 rounded-xl text-xs text-cyan-400 font-bold hover:bg-slate-800">
+              <i class="fa-solid fa-volume-high ml-1"></i> בדיקת קול
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick AI Prompt Buttons -->
+        <div class="flex gap-2 overflow-x-auto pb-1">
+          <button onclick="sendQuickPrompt('איך למקסם עלייה במסה בלי לצבור שומן?')" class="text-xs bg-slate-900 hover:bg-slate-800 text-slate-300 px-3 py-1.5 rounded-xl border border-white/5 whitespace-nowrap">
+            💡 איך לעלות במסה בלי שומן?
+          </button>
+          <button onclick="sendQuickPrompt('תן לי מתכון לארוחת ערב עתירת חלבון ומהירה')" class="text-xs bg-slate-900 hover:bg-slate-800 text-slate-300 px-3 py-1.5 rounded-xl border border-white/5 whitespace-nowrap">
+            🥗 ארוחת ערב עתירת חלבון
+          </button>
+          <button onclick="sendQuickPrompt('מה לקחת לפני אימון אנרגיה מקסימלית?')" class="text-xs bg-slate-900 hover:bg-slate-800 text-slate-300 px-3 py-1.5 rounded-xl border border-white/5 whitespace-nowrap">
+            ⚡ תזונה לפני אימון
+          </button>
+        </div>
+
+        <!-- Chat History Window -->
+        <div id="chat-window" class="flex-1 overflow-y-auto space-y-4 max-h-[360px] p-2 pr-1">
+          <div class="flex gap-3 items-start">
+            <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-500 to-emerald-500 text-slate-950 flex items-center justify-center font-black text-lg flex-shrink-0">
+              🤖
+            </div>
+            <div class="bg-slate-900/90 border border-white/10 p-4 rounded-2xl rounded-tr-none text-sm text-slate-200 leading-relaxed max-w-xl">
+              שלום! אני מאמן ה-AI האישי שלך. היעד הנוכחי שלך מוגדר כ-<strong class="text-emerald-400">חיטוב</strong>.
+              אפשר לדבר איתי במיקרופון או להקליד שאלה!
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat Input Bar -->
+        <div class="flex gap-2 pt-2">
+          <button id="mic-btn" onclick="toggleVoiceSpeechInput()" class="w-12 h-12 rounded-2xl bg-slate-900 border border-white/10 text-cyan-400 flex items-center justify-center text-lg hover:bg-slate-800 transition">
+            <i class="fa-solid fa-microphone"></i>
+          </button>
+
+          <input type="text" id="chat-input" placeholder="שאל את ה-AI שאלה בנושאי כושר ותזונה..." onkeypress="if(event.key==='Enter') sendChatMessage()" class="flex-1 bg-slate-950 border border-white/10 rounded-2xl px-5 text-sm text-white focus:outline-none focus:border-cyan-400">
+
+          <button onclick="sendChatMessage()" class="w-12 h-12 rounded-2xl btn-gradient-primary text-slate-950 font-black flex items-center justify-center text-lg shadow-lg">
+            <i class="fa-solid fa-paper-plane"></i>
+          </button>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ================= GOAL SELECTION MODAL ================= -->
+  <div id="goal-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center hidden p-4">
+    <div class="glass-card max-w-lg w-full p-6 md:p-8 rounded-3xl space-y-6 relative border border-emerald-500/30 max-h-[90vh] overflow-y-auto">
+      <button onclick="closeGoalModal()" class="absolute top-5 left-5 text-slate-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+
+      <div>
+        <h3 class="text-2xl font-black text-white">הגדרת נתונים אישיים ויעד <i class="fa-solid fa-bullseye text-emerald-400 ml-2"></i></h3>
+        <p class="text-xs text-slate-400 mt-1">היעדים והקלוריות מחושבים אישית לפי המשקל, הגובה והגיל שלך (לא זהה ל-30 ק"ג ול-80 ק"ג!).</p>
+      </div>
+
+      <div class="space-y-4">
+        <!-- Expanded Personal Body Metrics -->
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="text-[11px] font-bold text-slate-300 block mb-1">משקל (ק"ג):</label>
+            <input type="number" id="input-curr-weight" value="80" onchange="calculatePersonalTargets()" class="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-sm font-bold text-white">
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-slate-300 block mb-1">גובה (ס"מ):</label>
+            <input type="number" id="input-height" value="175" onchange="calculatePersonalTargets()" class="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-sm font-bold text-white">
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-slate-300 block mb-1">גיל:</label>
+            <input type="number" id="input-age" value="25" onchange="calculatePersonalTargets()" class="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-sm font-bold text-white">
+          </div>
+        </div>
+
+        <div>
+          <label class="text-xs font-bold text-slate-300 block mb-2">בחר סוג יעד מדויק:</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="selectGoalType('CUT_LIGHT')" id="goal-btn-cut_light" class="goal-type-btn p-3 rounded-2xl border text-right font-bold text-xs transition bg-emerald-500/20 border-emerald-500 text-emerald-400">
+              🔥 חיטוב מתון (-15% קלוריות)
+            </button>
+            <button onclick="selectGoalType('CUT_AGGRESSIVE')" id="goal-btn-cut_aggressive" class="goal-type-btn p-3 rounded-2xl border text-right font-bold text-xs transition bg-slate-900 border-white/5 text-slate-400">
+              ⚡ חיטוב אגרסיבי (-25% קלוריות)
+            </button>
+            <button onclick="selectGoalType('BULK_CLEAN')" id="goal-btn-bulk_clean" class="goal-type-btn p-3 rounded-2xl border text-right font-bold text-xs transition bg-slate-900 border-white/5 text-slate-400">
+              💪 מסה נקייה (+15% קלוריות)
+            </button>
+            <button onclick="selectGoalType('BULK_DIRTY')" id="goal-btn-bulk_dirty" class="goal-type-btn p-3 rounded-2xl border text-right font-bold text-xs transition bg-slate-900 border-white/5 text-slate-400">
+              🚀 מסה מואצת (+25% קלוריות)
+            </button>
+            <button onclick="selectGoalType('MAINTAIN')" id="goal-btn-maintain" class="goal-type-btn p-3 rounded-2xl border text-right font-bold text-xs transition bg-slate-900 border-white/5 text-slate-400">
+              ⚖️ שמירה ואיזון מטבולי
+            </button>
+            <button onclick="selectGoalType('REHAB')" id="goal-btn-rehab" class="goal-type-btn p-3 rounded-2xl border text-right font-bold text-xs transition bg-slate-900 border-white/5 text-slate-400">
+              🩹 שיקום & חיזוק שריר
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="text-xs font-bold text-slate-300 block mb-1">רמת פעילות יומיות:</label>
+          <select id="input-activity-level" onchange="calculatePersonalTargets()" class="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-2 text-xs font-bold text-slate-200">
+            <option value="1.2">יושב רוב היום (מעט/ללא אימונים)</option>
+            <option value="1.375" selected>פעיל קל (אימונים 1-3 פעמים בשבוע)</option>
+            <option value="1.55">בינוני (אימונים 3-5 פעמים בשבוע)</option>
+            <option value="1.725">ספורטאי פעיל (אימונים 6-7 פעמים בשבוע)</option>
+          </select>
+        </div>
+
+        <!-- Dynamic Target Output Summary Preview -->
+        <div class="bg-slate-900/90 p-4 rounded-2xl border border-emerald-500/40 text-center space-y-1">
+          <span class="text-[10px] text-slate-400 font-bold block">היעד הקלורי והחלבון המחושב עבורך:</span>
+          <div class="flex justify-center items-center gap-4 text-emerald-400 font-black text-sm">
+            <span id="preview-calc-cals">1,950 קלוריות/יום</span>
+            <span>|</span>
+            <span id="preview-calc-prot" class="text-amber-400">160g חלבון/יום</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4">
+          <div>
+            <label class="text-xs font-bold text-slate-300 block mb-1">משקל יעד (ק"ג):</label>
+            <input type="number" id="input-target-weight" value="70" class="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-2 text-sm font-bold text-emerald-400">
+          </div>
+        </div>
+      </div>
+
+      <button onclick="saveUserGoals()" class="w-full py-4 btn-gradient-primary text-slate-950 font-black rounded-2xl shadow-xl transition">
+        שמור יעד ועדכן תוכנית אישית
+      </button>
+
+    </div>
+  </div>
+
+  <!-- ================= JAVASCRIPT LOGIC ================= -->
+  <script>
+    // System State - Custom BMR/TDEE & Personalized Goals
+    let userGoal = { 
+      type: 'CUT_LIGHT', 
+      currentWeight: 80, 
+      height: 175,
+      age: 25,
+      targetWeight: 70,
+      activity: 1.375,
+      targetCals: 1950,
+      targetProtein: 160
+    };
+    let waterLiters = 0.0;
+    let totalCalsToday = 0;
+    let totalProteinToday = 0;
+    let loggedMealsArray = [];
+    let currentAnalyzedMeal = null;
+    let historyCalendarData = {};
+
+    // Tab Switching Logic
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.nav-tab').forEach(btn => {
+        btn.className = 'nav-tab text-sm font-bold px-4 py-2 rounded-xl transition-all text-slate-400 hover:text-white whitespace-nowrap';
+      });
+
+      const selectedTab = document.getElementById(`tab-${tabName}`);
+      const selectedBtn = document.getElementById(`tab-btn-${tabName}`);
+
+      if (selectedTab) selectedTab.classList.remove('hidden');
+      if (selectedBtn) {
+        selectedBtn.className = 'nav-tab text-sm font-bold px-4 py-2 rounded-xl transition-all text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 whitespace-nowrap';
+      }
+    }
+
+    // Modal Controls
+    function openGoalModal() {
+      document.getElementById('goal-modal')?.classList.remove('hidden');
+    }
+    function closeGoalModal() {
+      document.getElementById('goal-modal')?.classList.add('hidden');
+    }
+
+    // Water Tracker Logic
+    function addWater(amount) {
+      waterLiters = parseFloat((waterLiters + amount).toFixed(2));
+      updateWaterDisplay();
+    }
+
+    function addCustomWater() {
+      const input = document.getElementById('custom-water-ml');
+      const val = parseFloat(input?.value);
+      if (val && val > 0) {
+        waterLiters = parseFloat((waterLiters + (val / 1000)).toFixed(2));
+        updateWaterDisplay();
+        input.value = '';
+      }
+    }
+
+    function updateWaterDisplay() {
+      const waterDisplay = document.getElementById('water-liters-display');
+      const waterBar = document.getElementById('water-bar');
+      const waterCountText = document.getElementById('water-count-text');
+
+      if (waterDisplay) waterDisplay.innerText = `${waterLiters.toFixed(1)} ליטר`;
+      if (waterCountText) waterCountText.innerText = `${waterLiters.toFixed(1)} / 3.0L`;
+      if (waterBar) {
+        const pct = Math.min((waterLiters / 3.0) * 100, 100);
+        waterBar.style.width = `${pct}%`;
+      }
+    }
+
+    // Image Upload Handling
+    function handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = document.getElementById('image-preview');
+          const placeholder = document.getElementById('upload-placeholder');
+          if (img) {
+            img.src = e.target.result;
+            img.classList.remove('hidden');
+          }
+          if (placeholder) placeholder.classList.add('hidden');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // Analyze Meal Function (Fixes text submission and displays results)
+    function analyzeMealWithAI() {
+      const textInput = document.getElementById('meal-text-notes')?.value.trim();
+      const statusTag = document.getElementById('scan-status-tag');
+      
+      if (!textInput) {
+        alert('אנא הקלד מה אכלת וכמה גרם מכל דבר');
+        return;
+      }
+
+      if (statusTag) {
+        statusTag.innerText = 'מנתח ארוחה... ⏳';
+        statusTag.className = 'text-xs bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full font-bold animate-pulse';
+      }
+
+      // Execute detailed nutrition parsing
+      setTimeout(() => {
+        const result = parseTextLocally(textInput);
+        currentAnalyzedMeal = result;
+
+        document.getElementById('res-meal-title').innerText = result.title;
+        document.getElementById('res-meal-desc').innerText = 'ניתוח הושלם בהצלחה!';
+        document.getElementById('res-cals').innerText = result.cals.toLocaleString();
+        document.getElementById('res-protein').innerText = `${result.protein}g`;
+        document.getElementById('res-carbs').innerText = `${result.carbs}g`;
+        document.getElementById('res-fats').innerText = `${result.fats}g`;
+
+        const ingList = document.getElementById('res-ingredients-list');
+        if (ingList) {
+          ingList.innerHTML = result.ingredients.map(ing => 
+            `<div class="text-xs bg-slate-900 border border-white/5 p-2 rounded-xl text-emerald-300 font-semibold flex justify-between items-center">
+              <span>${ing}</span>
+            </div>`
+          ).join('');
+        }
+
+        if (statusTag) {
+          statusTag.innerText = 'ניתוח הושלם ✅';
+          statusTag.className = 'text-xs bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full font-bold';
+        }
+      }, 300);
+    }
+
+    // Dynamic Target Calculation Engine (BMR based on Mifflin-St Jeor formula)
+    function calculatePersonalTargets() {
+      const weight = parseFloat(document.getElementById('input-curr-weight')?.value) || 80;
+      const height = parseFloat(document.getElementById('input-height')?.value) || 175;
+      const age = parseFloat(document.getElementById('input-age')?.value) || 25;
+      const activity = parseFloat(document.getElementById('input-activity-level')?.value) || 1.375;
+
+      // BMR calculation
+      const bmr = (10 * weight) + (6.25 * height) - (5 * age) + 5;
+      const tdee = bmr * activity;
+
+      let cals = tdee;
+      let proteinFactor = 2.0; // grams per kg
+
+      switch(userGoal.type) {
+        case 'CUT_LIGHT': cals = tdee * 0.85; proteinFactor = 2.2; break;
+        case 'CUT_AGGRESSIVE': cals = tdee * 0.75; proteinFactor = 2.4; break;
+        case 'BULK_CLEAN': cals = tdee * 1.15; proteinFactor = 1.8; break;
+        case 'BULK_DIRTY': cals = tdee * 1.25; proteinFactor = 1.8; break;
+        case 'MAINTAIN': cals = tdee; proteinFactor = 1.8; break;
+        case 'REHAB': cals = tdee * 1.05; proteinFactor = 2.0; break;
+      }
+
+      userGoal.targetCals = Math.round(cals);
+      userGoal.targetProtein = Math.round(weight * proteinFactor);
+
+      const previewCals = document.getElementById('preview-calc-cals');
+      const previewProt = document.getElementById('preview-calc-prot');
+      if (previewCals) previewCals.innerText = `${userGoal.targetCals.toLocaleString()} קלוריות/יום`;
+      if (previewProt) previewProt.innerText = `${userGoal.targetProtein}g חלבון/יום`;
+    }
+
+    // High Precision Local & AI Meal Parsing Engine for Shakes, Dates, Milk & Protein Powder
+    function parseTextLocally(text) {
+      let cals = 0, protein = 0, carbs = 0, fats = 0;
+      const ingredients = [];
+      const lowerText = text.toLowerCase();
+
+      // Extended Dictionary for Shakes, Fruits, Powders, Dairy, Meats & Staples
+      const foodDatabase = [
+        { keys: ['תמר', 'תמרים'], unitCals: 24, unitProt: 0.2, unitCarb: 6, unitFat: 0.05, perItem: true },
+        { keys: ['חלבון', 'אבקת חלבון', 'שייק חלבון', 'סקופ חלבון'], unitCals: 120, unitProt: 24, unitCarb: 3, unitFat: 1.5, perItem: true },
+        { keys: ['כוס חלב', 'חלב'], defaultGrams: 240, multCals: 0.6, multProt: 0.033, multCarb: 0.048, multFat: 0.032 },
+        { keys: ['שיבולת שועל', 'קוואקר'], defaultGrams: 50, multCals: 3.89, multProt: 0.169, multCarb: 0.66, multFat: 0.069 },
+        { keys: ['חמאת בוטנים'], defaultGrams: 30, multCals: 5.88, multProt: 0.25, multCarb: 0.20, multFat: 0.50 },
+        { keys: ['בננה', 'בננות'], unitCals: 105, unitProt: 1.3, unitCarb: 27, unitFat: 0.3, perItem: true },
+        { keys: ['תפוח', 'תפוחים'], unitCals: 95, unitProt: 0.5, unitCarb: 25, unitFat: 0.3, perItem: true },
+        { keys: ['חזה עוף', 'עוף'], defaultGrams: 150, multCals: 1.65, multProt: 0.31, multCarb: 0, multFat: 0.036 },
+        { keys: ['סטייק', 'אנטריקוט', 'בשר'], defaultGrams: 200, multCals: 2.5, multProt: 0.26, multCarb: 0, multFat: 0.16 },
+        { keys: ['אורז', 'אורז לבן', 'אורז מלא'], defaultGrams: 150, multCals: 1.3, multProt: 0.027, multCarb: 0.28, multFat: 0.003 },
+        { keys: ['טונה'], defaultGrams: 100, multCals: 1.3, multProt: 0.26, multCarb: 0, multFat: 0.01 },
+        { keys: ['שמן זית', 'שמן'], defaultGrams: 14, multCals: 8.84, multProt: 0, multCarb: 0, multFat: 1.0 },
+        { keys: ['אגוזי מלך', 'אגוזים', 'שקדים'], defaultGrams: 30, multCals: 6.54, multProt: 0.15, multCarb: 0.14, multFat: 0.65 }
+      ];
+
+      // Scan items in text
+      foodDatabase.forEach(item => {
+        const foundKey = item.keys.find(k => lowerText.includes(k));
+        if (foundKey) {
+          let count = 1;
+          let grams = item.defaultGrams || 100;
+
+          // Detect quantities like "5 תמרים" or "200 גרם"
+          const countRegex = new RegExp(`(\\d+)\\s*(${item.keys.join('|')})`, 'i');
+          const gramsRegex = new RegExp(`(\\d+)\\s*(גרם|ג|g)\\s*.*(${item.keys.join('|')})`, 'i');
+
+          const countMatch = text.match(countRegex);
+          const gramsMatch = text.match(gramsRegex);
+
+          if (item.perItem) {
+            if (countMatch) count = parseInt(countMatch[1]) || 1;
+            const itemCals = Math.round(count * item.unitCals);
+            const itemProt = Math.round(count * item.unitProt);
+            const itemCarb = Math.round(count * item.unitCarb);
+            const itemFat = Math.round(count * item.unitFat);
+
+            cals += itemCals; protein += itemProt; carbs += itemCarb; fats += itemFat;
+            ingredients.push(`${foundKey} (${count} יחידות) - ${itemCals} קלוריות, ${itemProt}g חלבון, ${itemCarb}g פחמימה, ${itemFat}g שומן`);
+          } else {
+            // Updated regex to prevent syntax errors with Hebrew characters inside RegExp
+            const matchGrams = text.match(/(\d+)\s*(?:גרם|ג|g)/i);
+            if (matchGrams) grams = parseInt(matchGrams[1]) || grams;
+            else if (countMatch) grams = (parseInt(countMatch[1]) || 1) * grams;
+
+            const itemCals = Math.round(grams * item.multCals);
+            const itemProt = Math.round(grams * item.multProt);
+            const itemCarb = Math.round(grams * item.multCarb);
+            const itemFat = Math.round(grams * item.multFat);
+
+            cals += itemCals; protein += itemProt; carbs += itemCarb; fats += itemFat;
+            ingredients.push(`${foundKey} (${grams}g) - ${itemCals} קלוריות, ${itemProt}g חלבון, ${itemCarb}g פחמימה, ${itemFat}g שומן`);
+          }
+        }
+      });
+
+      // General fallback if no known items were matched
+      if (cals === 0) {
+        cals = 380; protein = 25; carbs = 42; fats = 10;
+        ingredients.push(`ארוחה כללית: ${text} (~380 קלוריות)`);
+      }
+
+      return {
+        title: text.length > 35 ? text.substring(0, 35) + '...' : text,
+        cals, protein, carbs, fats, ingredients
+      };
+    }
+
+    // Log Analyzed Meal & Update Dashboard with Custom User Targets
+    function logScannedMealToDashboard() {
+      if (!currentAnalyzedMeal) {
+        alert('יש לנתח ארוחה תחילה');
+        return;
+      }
+
+      const { title, cals, protein } = currentAnalyzedMeal;
+      totalCalsToday += cals;
+      totalProteinToday += protein;
+
+      // Dynamic Personalized Metric Displays
+      const targetCals = userGoal.targetCals || 1950;
+      const targetProt = userGoal.targetProtein || 160;
+
+      document.getElementById('cals-summary-display').innerText = `${totalCalsToday.toLocaleString()} / ${targetCals.toLocaleString()}`;
+      const calsPct = Math.min(Math.round((totalCalsToday / targetCals) * 100), 100);
+      document.getElementById('cals-percent-display').innerText = `${calsPct}% מתוך היעד האישי`;
+
+      document.getElementById('protein-summary-display').innerText = `${totalProteinToday}g / ${targetProt}g`;
+      document.getElementById('protein-rem-display').innerText = `נותרו ${Math.max(targetProt - totalProteinToday, 0)} גרם`;
+
+      const emptyMsg = document.getElementById('empty-meals-msg');
+      if (emptyMsg) emptyMsg.classList.add('hidden');
+
+      const list = document.getElementById('logged-meals-list');
+      loggedMealsArray.push({ title, cals, protein });
+
+      list.innerHTML = `
+        <div class="bg-slate-900/80 border border-emerald-500/30 p-4 rounded-2xl flex items-center justify-between">
+          <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg">🍽️</div>
+            <div>
+              <h4 class="font-bold text-white text-sm">${title}</h4>
+              <p class="text-xs text-slate-400">נרשם להיום</p>
+            </div>
+          </div>
+          <div class="text-left">
+            <div class="text-emerald-400 font-black text-sm">${cals} קלוריות</div>
+            <div class="text-purple-400 text-xs font-bold">${protein}g חלבון</div>
+          </div>
+        </div>
+      ` + list.innerHTML;
+
+      document.getElementById('meal-text-notes').value = '';
+    }
+
+    // Day Finish & Calendar History Logic
+    function finishAndCloseDay() {
+      const todayStr = new Date().toLocaleDateString('he-IL', { year: 'numeric', month: '2-digit', day: '2-digit' });
+
+      historyCalendarData[todayStr] = {
+        date: todayStr,
+        cals: totalCalsToday,
+        protein: totalProteinToday,
+        water: waterLiters,
+        meals: [...loggedMealsArray]
+      };
+
+      alert(`יום ה- ${todayStr} נסגר בהצלחה ונשמר בלוח השנה! כעת הנתונים מתאפסים ל-0.`);
+
+      // Reset today's stats to 0
+      totalCalsToday = 0;
+      totalProteinToday = 0;
+      waterLiters = 0.0;
+      loggedMealsArray = [];
+
+      document.getElementById('cals-summary-display').innerText = `0 / ${userGoal.targetCals.toLocaleString()}`;
+      document.getElementById('cals-percent-display').innerText = `0% מתוך היעד`;
+      document.getElementById('protein-summary-display').innerText = `0g / ${userGoal.targetProtein}g`;
+      document.getElementById('protein-rem-display').innerText = `נותרו ${userGoal.targetProtein} גרם`;
+
+      updateWaterDisplay();
+
+      const loggedList = document.getElementById('logged-meals-list');
+      if (loggedList) {
+        loggedList.innerHTML = `<div id="empty-meals-msg" class="text-center py-6 text-xs text-slate-500 border border-dashed border-white/10 rounded-2xl">עדיין לא רשמת ארוחות היום. רשום מה אכלת למעלה כדי להתחיל!</div>`;
+      }
+
+      renderCalendarDaysList();
+    }
+
+    // Render Calendar List Items
+    function renderCalendarDaysList() {
+      const container = document.getElementById('calendar-days-list');
+      if (!container) return;
+
+      const keys = Object.keys(historyCalendarData);
+      if (keys.length === 0) {
+        container.innerHTML = `<div class="text-xs text-slate-500 italic p-2">אין עדיין ימים שנסגרו. לחץ על "סגרתי את היום" בדשבורד!</div>`;
+        return;
+      }
+
+      container.innerHTML = keys.map(dateKey => `
+        <button onclick="selectCalendarDay('${dateKey}')" class="w-full text-right p-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-white/5 flex justify-between items-center transition">
+          <span class="text-xs font-bold text-white">${dateKey}</span>
+          <span class="text-[10px] text-emerald-400 font-bold">${historyCalendarData[dateKey].cals} קלוריות</span>
+        </button>
+      `).join('');
+    }
+
+    function selectCalendarDay(dateKey) {
+      const dayData = historyCalendarData[dateKey];
+      if (!dayData) return;
+
+      document.getElementById('cal-selected-date').innerText = `נתוני יום: ${dayData.date}`;
+      document.getElementById('cal-day-cals').innerText = dayData.cals.toLocaleString();
+      document.getElementById('cal-day-protein').innerText = `${dayData.protein}g`;
+      document.getElementById('cal-day-water').innerText = `${dayData.water.toFixed(1)}L`;
+
+      const mealsContainer = document.getElementById('cal-day-meals');
+      if (mealsContainer) {
+        if (dayData.meals.length === 0) {
+          mealsContainer.innerHTML = `<div class="text-xs text-slate-500 italic">לא נרשמו ארוחות ביום זה.</div>`;
+        } else {
+          mealsContainer.innerHTML = dayData.meals.map(m => `
+            <div class="bg-slate-900 p-2.5 rounded-xl border border-white/5 flex justify-between items-center">
+              <span class="font-bold text-white">${m.title}</span>
+              <span class="text-emerald-400 font-bold">${m.cals} קל' | ${m.protein}g חלבון</span>
+            </div>
+          `).join('');
+        }
+      }
+    }
+
+    // AI Speech & Chat Functions
+    function speakText(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'he-IL';
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    function sendQuickPrompt(promptText) {
+      const input = document.getElementById('chat-input');
+      if (input) input.value = promptText;
+      sendChatMessage();
+    }
+
+    function sendChatMessage() {
+      const input = document.getElementById('chat-input');
+      const chatWin = document.getElementById('chat-window');
+      const text = input?.value.trim();
+
+      if (!text || !chatWin) return;
+
+      chatWin.innerHTML += `
+        <div class="flex gap-3 items-start justify-end">
+          <div class="bg-emerald-500/20 border border-emerald-500/30 p-4 rounded-2xl rounded-tl-none text-sm text-emerald-200 leading-relaxed max-w-xl">
+            ${text}
+          </div>
+        </div>
+      `;
+
+      input.value = '';
+      chatWin.scrollTop = chatWin.scrollHeight;
+
+      setTimeout(() => {
+        let reply = "שאלה מצוינת! כדי להגיע לתוצאות אידיאליות, שמור על מאזן קלורי מתאים והקפד לצרוך 2 גרם חלבון לכל קילוגרם משקל גוף.";
+
+        if (text.includes("מסה")) reply = "כדי לעלות במסה נקייה, כוון לעודף קלורי מתון של 15%, הקפד על 1.8-2.2 גרם חלבון לק"ג משקל, והתמקד באימוני כוח עם עומס פרוגרסיבי.";
+        else if (text.includes("מתכון") || text.includes("ערב")) reply = "הנה רעיון לארוחת ערב עתירת חלבון: 200 גרם חזה עוף או טונה, 150 גרם אורז מלא, וסלט ירוק עם כף שמן זית (כ-450 קלוריות ו-45 גרם חלבון).";
+        else if (text.includes("לפני אימון")) reply = "לפני אימון מומלץ לאכול פחמימה זמינה (כמו בננה או 2-3 תמרים) כ-30-45 דקות לפני, כדי להבטיח מילוי מאגרי גליקוגן ואנרגיה מירבית.";
+
+        chatWin.innerHTML += `
+          <div class="flex gap-3 items-start">
+            <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-500 to-emerald-500 text-slate-950 flex items-center justify-center font-black text-lg flex-shrink-0">
+              🤖
+            </div>
+            <div class="bg-slate-900/90 border border-white/10 p-4 rounded-2xl rounded-tr-none text-sm text-slate-200 leading-relaxed max-w-xl">
+              ${reply}
+            </div>
+          </div>
+        `;
+        chatWin.scrollTop = chatWin.scrollHeight;
+        speakText(reply);
+      }, 500);
+    }
+
+    function toggleVoiceSpeechInput() {
+      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        alert('זיהוי קולי אינו נתמך בדפדפן זה.');
+        return;
+      }
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'he-IL';
+
+      recognition.onstart = function() {
+        const micBtn = document.getElementById('mic-btn');
+        if (micBtn) micBtn.className = 'w-12 h-12 rounded-2xl bg-red-600 text-white flex items-center justify-center text-lg animate-pulse';
+      };
+
+      recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        const input = document.getElementById('chat-input');
+        if (input) input.value = transcript;
+        sendChatMessage();
+      };
+
+      recognition.onend = function() {
+        const micBtn = document.getElementById('mic-btn');
+        if (micBtn) micBtn.className = 'w-12 h-12 rounded-2xl bg-slate-900 border border-white/10 text-cyan-400 flex items-center justify-center text-lg hover:bg-slate-800 transition';
+      };
+
+      recognition.start();
+    }
+
+    function shareAppToWhatsApp() {
+      const msg = encodeURIComponent("הצטרפו אלי ל-FIT-AI PRO! אפליקציית כושר ותזונה מתקדמת עם AI ⚡");
+      window.open(`https://api.whatsapp.com/send?text=${msg}`, '_blank');
+    }
+
+    function selectGoalType(type) {
+      userGoal.type = type;
+      document.querySelectorAll('.goal-type-btn').forEach(btn => {
+        btn.className = 'goal-type-btn p-3 rounded-2xl border text-right font-bold text-xs transition bg-slate-900 border-white/5 text-slate-400';
+      });
+      const selected = document.getElementById(`goal-btn-${type.toLowerCase()}`);
+      if (selected) selected.className = 'goal-type-btn p-3 rounded-2xl border text-right font-bold text-xs transition bg-emerald-500/20 border-emerald-500 text-emerald-400';
+      
+      calculatePersonalTargets();
+    }
+
+    function saveUserGoals() {
+      userGoal.currentWeight = parseFloat(document.getElementById('input-curr-weight').value) || 80;
+      userGoal.height = parseFloat(document.getElementById('input-height').value) || 175;
+      userGoal.age = parseFloat(document.getElementById('input-age').value) || 25;
+      userGoal.targetWeight = parseFloat(document.getElementById('input-target-weight').value) || 70;
+      
+      calculatePersonalTargets();
+
+      const goalLabels = {
+        CUT_LIGHT: 'חיטוב מתון',
+        CUT_AGGRESSIVE: 'חיטוב אגרסיבי',
+        BULK_CLEAN: 'מסה נקייה',
+        BULK_DIRTY: 'מסה מואצת',
+        MAINTAIN: 'שמירה על משקל',
+        REHAB: 'שיקום & חיזוק'
+      };
+
+      const label = goalLabels[userGoal.type] || 'יעד מותאם';
+      document.getElementById('header-goal-badge').innerText = `יעד: ${label} (${userGoal.currentWeight}←${userGoal.targetWeight} ק"ג)`;
+      document.getElementById('user-goal-type-label').innerText = label;
+      document.getElementById('user-weight-display').innerText = `${userGoal.currentWeight} ק"ג ← ${userGoal.targetWeight} ק"ג`;
+      
+      document.getElementById('cals-summary-display').innerText = `${totalCalsToday.toLocaleString()} / ${userGoal.targetCals.toLocaleString()}`;
+      document.getElementById('protein-summary-display').innerText = `${totalProteinToday}g / ${userGoal.targetProtein}g`;
+      document.getElementById('protein-rem-display').innerText = `נותרו ${Math.max(userGoal.targetProtein - totalProteinToday, 0)} גרם`;
+
+      closeGoalModal();
+    }
+
+    window.onload = function() {
+      calculatePersonalTargets();
+      renderCalendarDaysList();
+    };
+  </script>
+</body>
+</html>

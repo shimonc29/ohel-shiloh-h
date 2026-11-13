@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>עולם כלי המוזיקה - אתר דינמי</title>
+    <!-- טעינת Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- פונט Inter מותאם -->
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Assistant', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-header flex flex-col min-h-screen">
+
+    <!-- הודעת מערכת חלופית במקום alert -->
+    <div id="toast" class="fixed bottom-5 left-5 bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl transform translate-y-32 transition-all duration-300 z-50 flex items-center gap-3">
+        <span id="toast-message">הפעולה בוצעה בהצלחה!</span>
+    </div>
+
+    <!-- כותרת עליונה -->
+    <header class="bg-gradient-to-r from-indigo-700 to-purple-800 text-white shadow-lg py-6 px-4 md:px-8">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-white/10 p-3 rounded-2xl">
+                    <svg class="w-8 h-8 text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold">עולם כלי המוזיקה</h1>
+                    <p class="text-indigo-200 text-sm">אתר דינמי אישי המרכז את הכלים האהובים עליך</p>
+                </div>
+            </div>
+
+            <!-- סרגל ניווט דינמי בין הדפים -->
+            <nav id="pages-nav" class="flex flex-wrap gap-2 justify-center bg-white/10 p-2 rounded-2xl backdrop-blur-sm">
+                <!-- כפתורי הדפים יטענו כאן דינמית -->
+            </nav>
+        </div>
+    </header>
+
+    <!-- אזור תוכן ראשי -->
+    <main class="flex-grow max-w-6xl w-full mx-auto p-4 md:p-8">
+        
+        <!-- סרגל פעולות דף נוכחי (הוספת דף, תמונה, סרטון) -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 md:p-6 mb-8 flex flex-wrap gap-4 items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="inline-block w-3 h-3 bg-indigo-600 rounded-full animate-pulse"></span>
+                <h2 id="current-page-title" class="text-xl font-bold text-slate-800">דף הבית</h2>
+            </div>
+
+            <div class="flex flex-wrap gap-3">
+                <!-- כפתור הוספת דף נוסף -->
+                <button onclick="openModal('pageModal')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-semibold shadow-md shadow-indigo-200 transition-all flex items-center gap-2 text-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    הוסף דף חדש לאתר
+                </button>
+
+                <!-- כפתור הוספת תמונה -->
+                <button onclick="openModal('imageModal')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-semibold shadow-md shadow-emerald-200 transition-all flex items-center gap-2 text-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    הוסף תמונה לדף
+                </button>
+
+                <!-- כפתור הוספת סרטון יוטיוב -->
+                <button onclick="openModal('videoModal')" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-xl font-semibold shadow-md shadow-rose-200 transition-all flex items-center gap-2 text-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    הוסף סרטון יוטיוב לדף
+                </button>
+            </div>
+        </div>
+
+        <!-- אזור שיתוף עמוד נוכחי -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 mb-8 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-2 text-slate-700 font-medium">
+                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
+                <span>שתף את הדף הנוכחי:</span>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <button onclick="shareToWhatsApp()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 shadow-sm transition-all">
+                    וואטסאפ
+                </button>
+                <button onclick="shareToEmail()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 shadow-sm transition-all">
+                    אימייל
+                </button>
+                <button onclick="shareToGoogleChat()" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 shadow-sm transition-all">
+                    גוגל צ'אט
+                </button>
+            </div>
+        </div>
+
+        <!-- אזור הצגת התוכן של הדף הנוכחי (תמונות וסרטונים) -->
+        <div id="page-content-area" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            <!-- התוכן יוזרק לכאן דינמית -->
+        </div>
+
+        <!-- אזור תגובות ציבוריות לדף -->
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8">
+            <h3 class="text-xl font-bold text-slate-800 mb-2 flex items-center gap-2">
+                <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path></svg>
+                תגובות הגולשים לדף זה
+            </h3>
+            <p class="text-sm text-slate-500 mb-6">שתף את דעתך, כולם יוכלו לראות את התגובה שלך!</p>
+
+            <!-- טופס הוספת תגובה -->
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 mb-6 flex flex-col gap-3">
+                <input type="text" id="commentAuthor" placeholder="השם שלך..." class="w-full md:w-1/3 bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <textarea id="commentText" placeholder="כתוב תגובה על הדף..." rows="3" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                <div class="flex justify-end">
+                    <button onclick="addComment()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-semibold text-sm shadow-md transition-all">פרסם תגובה</button>
+                </div>
+            </div>
+
+            <!-- רשימת התגובות -->
+            <div id="comments-list" class="space-y-4">
+                <!-- תגובות יוזרקו לכאן דינמית -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- מודל להוספת דף -->
+    <div id="pageModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl">
+            <h3 class="text-xl font-bold mb-4">הוספת דף חדש לאתר</h3>
+            <p class="text-sm text-slate-500 mb-4">הקלד את שם כלי המוזיקה או נושא הדף שתרצה ליצור.</p>
+            <input type="text" id="newPageName" placeholder="לדוגמה: פסנתר, גיטרה חשמלית..." class="w-full border border-slate-300 rounded-xl px-4 py-3 mb-6 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <div class="flex justify-end gap-3">
+                <button onclick="closeModal('pageModal')" class="px-5 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 font-medium">ביטול</button>
+                <button onclick="addNewPage()" class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-indigo-700">צור דף</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- מודל להוספת תמונה -->
+    <div id="imageModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl">
+            <h3 class="text-xl font-bold mb-4">הוספת תמונה מן האינטרנט</h3>
+            <p class="text-sm text-slate-500 mb-4">הדבק כאן קישור ישיר (URL) לתמונה שברצונך להציג בדף זה.</p>
+            <input type="text" id="imageUrlInput" placeholder="https://example.com/image.jpg" class="w-full border border-slate-300 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:ring-2 focus:ring-emerald-500" dir="ltr">
+            <input type="text" id="imageTitleInput" placeholder="כותרת או תיאור לתמונה (למשל: גיטרה אקוסטית)" class="w-full border border-slate-300 rounded-xl px-4 py-3 mb-6 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            <div class="flex justify-end gap-3">
+                <button onclick="closeModal('imageModal')" class="px-5 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 font-medium">ביטול</button>
+                <button onclick="addImageToCurrentPage()" class="bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-emerald-700">הוסף תמונה</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- מודל להוספת סרטון יוטיוב -->
+    <div id="videoModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl">
+            <h3 class="text-xl font-bold mb-4">הוספת סרטון מיוטיוב</h3>
+            <p class="text-sm text-slate-500 mb-4">הדבק כאן קישור לסרטון יוטיוב (או מזהה הסרטון).</p>
+            <input type="text" id="videoUrlInput" placeholder="https://www.youtube.com/watch?v=XXXXX או מזהה הסרטון" class="w-full border border-slate-300 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:ring-2 focus:ring-rose-500" dir="ltr">
+            <input type="text" id="videoTitleInput" placeholder="כותרת או תיאור לסרטון (למשל: סולו גיטרה מדהים)" class="w-full border border-slate-300 rounded-xl px-4 py-3 mb-6 focus:outline-none focus:ring-2 focus:ring-rose-500">
+            <div class="flex justify-end gap-3">
+                <button onclick="closeModal('videoModal')" class="px-5 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 font-medium">ביטול</button>
+                <button onclick="addVideoToCurrentPage()" class="bg-rose-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-rose-700">הוסף סרטון</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- תחתית האתר -->
+    <footer class="bg-white border-t border-slate-200 text-center py-4 text-sm text-slate-500 mt-auto">
+        כל הזכויות שמורות לאתר כלי המוזיקה הדינמי &copy; 2026
+    </footer>
+
+    <!-- JavaScript לניהול הנתונים, הלייקים, התגובות והשיתוף -->
+    <script>
+        // מבנה נתונים ראשוני: דפים, פריטים (עם לייקים), ותגובות
+        let siteData = {
+            pages: [
+                {
+                    id: 'home',
+                    name: 'דף הבית - מבוא',
+                    items: [
+                        {
+                            type: 'image',
+                            url: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80',
+                            title: 'ברוכים הבאים לעולם המוזיקה',
+                            likes: 5
+                        },
+                        {
+                            type: 'video',
+                            url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+                            title: 'שיר לדוגמה',
+                            likes: 12
+                        }
+                    ],
+                    comments: [
+                        { author: 'דניאל', text: 'אתר מדהים ממש אהבתי את הפסנתרים!', date: '06/03/2026' }
+                    ]
+                },
+                {
+                    id: 'guitar',
+                    name: 'גיטרה',
+                    items: [
+                        {
+                            type: 'image',
+                            url: 'https://images.unsplash.com/photo-1525201548942-d8732f6617a0?auto=format&fit=crop&w=800&q=80',
+                            title: 'גיטרה אקוסטית',
+                            likes: 8
+                        }
+                    ],
+                    comments: [
+                        { author: 'נועה', text: 'איזה תמונה מהממת של הגיטרה!', date: '06/03/2026' }
+                    ]
+                }
+            ],
+            currentPageId: 'home'
+        };
+
+        // טעינת נתונים מ-localStorage אם קיימים
+        function loadData() {
+            const saved = localStorage.getItem('musicSiteData');
+            if (saved) {
+                try {
+                    siteData = JSON.parse(saved);
+                } catch(e) {
+                    console.error('Error loading saved data');
+                }
+            }
+        }
+
+        // שמירת נתונים ל-localStorage
+        function saveData() {
+            localStorage.setItem('musicSiteData', JSON.stringify(siteData));
+        }
+
+        // הצגת הודעות טוסט מעוצבות
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            toastMsg.textContent = message;
+            toast.classList.remove('translate-y-32');
+            setTimeout(() => {
+                toast.classList.add('translate-y-32');
+            }, 3500);
+        }
+
+        // פתיחה וסגירה של מודלים
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+            document.getElementById(modalId).classList.add('flex');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+            document.getElementById(modalId).classList.remove('flex');
+        }
+
+        // מעבר לדף מסוים לפי ID
+        function switchPage(pageId) {
+            siteData.currentPageId = pageId;
+            render();
+        }
+
+        // הוספת דף חדש
+        function addNewPage() {
+            const nameInput = document.getElementById('newPageName');
+            const pageName = nameInput.value.trim();
+            if (!pageName) {
+                showToast('נא להזין שם לדף החדש');
+                return;
+            }
+
+            const newId = 'page_' + Date.now();
+            siteData.pages.push({
+                id: newId,
+                name: pageName,
+                items: [],
+                comments: []
+            });
+
+            siteData.currentPageId = newId;
+            nameInput.value = '';
+            closeModal('pageModal');
+            saveData();
+            render();
+            showToast(`הדף "${pageName}" נוצר בהצלחה!`);
+        }
+
+        // הוספת תמונה לדף הנוכחי
+        function addImageToCurrentPage() {
+            const urlInput = document.getElementById('imageUrlInput');
+            const titleInput = document.getElementById('imageTitleInput');
+            let url = urlInput.value.trim();
+            const title = titleInput.value.trim() || 'תמונה ללא כותרת';
+
+            if (!url) {
+                showToast('נא להזין קישור תקין לתמונה');
+                return;
+            }
+
+            const currentPage = siteData.pages.find(p => p.id === siteData.currentPageId);
+            if (currentPage) {
+                currentPage.items.push({
+                    type: 'image',
+                    url: url,
+                    title: title,
+                    likes: 0
+                });
+                urlInput.value = '';
+                titleInput.value = '';
+                closeModal('imageModal');
+                saveData();
+                render();
+                showToast('התמונה נוספה בהצלחה לדף!');
+            }
+        }
+
+        // פונקציית עזר להמרת קישור יוטיוב רגיל לקישור הטמעה (Embed)
+        function convertYouTubeUrl(url) {
+            if (!url) return '';
+            if (url.includes('embed/')) return url;
+
+            let videoId = '';
+            if (url.includes('youtu.be/')) {
+                videoId = url.split('youtu.be/')[1].split('?')[0];
+            } else if (url.includes('watch?v=')) {
+                videoId = url.split('watch?v=')[1].split('&')[0];
+            } else {
+                videoId = url;
+            }
+            return `https://www.youtube.com/embed/${videoId}`;
+        }
+
+        // הוספת סרטון יוטיוב לדף הנוכחי
+        function addVideoToCurrentPage() {
+            const urlInput = document.getElementById('videoUrlInput');
+            const titleInput = document.getElementById('videoTitleInput');
+            let rawUrl = urlInput.value.trim();
+            const title = titleInput.value.trim() || 'סרטון יוטיוב';
+
+            if (!rawUrl) {
+                showToast('נא להזין קישור לסרטון יוטיוב');
+                return;
+            }
+
+            const embedUrl = convertYouTubeUrl(rawUrl);
+
+            const currentPage = siteData.pages.find(p => p.id === siteData.currentPageId);
+            if (currentPage) {
+                currentPage.items.push({
+                    type: 'video',
+                    url: embedUrl,
+                    title: title,
+                    likes: 0
+                });
+                urlInput.value = '';
+                titleInput.value = '';
+                closeModal('videoModal');
+                saveData();
+                render();
+                showToast('סרטון היוטיוב נוסף בהצלחה לדף!');
+            }
+        }
+
+        // הוספת לייק לפריט ספציפי (תמונה או סרטון)
+        function likeItem(index) {
+            const currentPage = siteData.pages.find(p => p.id === siteData.currentPageId);
+            if (currentPage && currentPage.items[index]) {
+                currentPage.items[index].likes = (currentPage.items[index].likes || 0) + 1;
+                saveData();
+                render();
+                showToast('אהבתי! נתן לייק בהצלחה ❤️');
+            }
+        }
+
+        // מחיקת פריט מהדף
+        function deleteItem(index) {
+            const currentPage = siteData.pages.find(p => p.id === siteData.currentPageId);
+            if (currentPage) {
+                currentPage.items.splice(index, 1);
+                saveData();
+                render();
+                showToast('הפריט נמחק בהצלחה');
+            }
+        }
+
+        // הוספת תגובה בדף הנוכחי
+        function addComment() {
+            const authorInput = document.getElementById('commentAuthor');
+            const textInput = document.getElementById('commentText');
+            const author = authorInput.value.trim() || 'אורח אנונימי';
+            const text = textInput.value.trim();
+
+            if (!text) {
+                showToast('נא לכתוב טקסט בתגובה');
+                return;
+            }
+
+            const currentPage = siteData.pages.find(p => p.id === siteData.currentPageId);
+            if (currentPage) {
+                if (!currentPage.comments) currentPage.comments = [];
+                
+                const now = new Date();
+                const dateStr = now.toLocaleDateString('he-IL') + ' ' + now.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+
+                currentPage.comments.push({
+                    author: author,
+                    text: text,
+                    date: dateStr
+                });
+
+                textInput.value = '';
+                saveData();
+                render();
+                showToast('התגובה פורסמה בהצלחה!');
+            }
+        }
+
+        // שיתוף לוואטסאפ
+        function shareToWhatsApp() {
+            const currentPage = siteData.pages.find(p => p.id === siteData.currentPageId);
+            const pageName = currentPage ? currentPage.name : 'אתר כלי המוזיקה';
+            const text = encodeURIComponent(`היי! מוזמנים לבקר בדף "${pageName}" באתר כלי המוזיקה המדהים שלנו.`);
+            window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+        }
+
+        // שיתוף במייל
+        function shareToEmail() {
+            const currentPage = siteData.pages.find(p => p.id === siteData.currentPageId);
+            const pageName = currentPage ? currentPage.name : 'אתר כלי המוזיקה';
+            const subject = encodeURIComponent(`המלצה על אתר כלי המוזיקה - ${pageName}`);
+            const body = encodeURIComponent(`שלום,\n\nאני מזמין אותך לבקר בדף "${pageName}" באתר כלי המוזיקה.\nכדאי לך לראות את התמונות והסרטונים!`);
+            window.location.href = `mailto:?subject=${subject}&body=${body}`;
+        }
+
+        // שיתוף לגוגל צ'אט
+        function shareToGoogleChat() {
+            const currentPage = siteData.pages.find(p => p.id === siteData.currentPageId);
+            const pageName = currentPage ? currentPage.name : 'אתר כלי המוזיקה';
+            const text = encodeURIComponent(`בדקו את הדף "${pageName}" באתר כלי המוזיקה!`);
+            window.open(`https://chat.google.com/?text=${text}`, '_blank');
+        }
+
+        // פונקציית הרינדור הראשית
+        function render() {
+            let currentPage = siteData.pages.find(p => p.id === siteData.currentPageId);
+            if (!currentPage && siteData.pages.length > 0) {
+                siteData.currentPageId = siteData.pages[0].id;
+                currentPage = siteData.pages[0];
+            }
+
+            // עדכון כותרת הדף הנוכחי
+            document.getElementById('current-page-title').textContent = currentPage ? currentPage.name : 'בחר דף';
+
+            // רינדור כפתורי הניווט העליונים
+            const navContainer = document.getElementById('pages-nav');
+            navContainer.innerHTML = '';
+            siteData.pages.forEach(page => {
+                const btn = document.createElement('button');
+                const isActive = page.id === siteData.currentPageId;
+                btn.className = `px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                    isActive 
+                        ? 'bg-white text-indigo-700 shadow-md' 
+                        : 'text-white/80 hover:bg-white/10 hover:text-white'
+                }`;
+                btn.textContent = page.name;
+                btn.onclick = () => switchPage(page.id);
+                navContainer.appendChild(btn);
+            });
+
+            // רינדור תוכן הדף הנוכחי (תמונות וסרטונים עם לייקים)
+            const contentArea = document.getElementById('page-content-area');
+            contentArea.innerHTML = '';
+
+            if (!currentPage || currentPage.items.length === 0) {
+                contentArea.innerHTML = `
+                    <div class="col-span-full py-16 text-center bg-white rounded-3xl border border-dashed border-slate-300">
+                        <svg class="w-16 h-16 mx-auto text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                        <h3 class="text-lg font-semibold text-slate-600 mb-1">הדף הזה ריק כרגע</h3>
+                        <p class="text-slate-400 text-sm mb-4">השתמש בכפתורים למעלה כדי להוסיף תמונות או סרטוני יוטיוב לדף זה.</p>
+                    </div>
+                `;
+            } else {
+                currentPage.items.forEach((item, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col group';
+
+                    let mediaHtml = '';
+                    if (item.type === 'image') {
+                        mediaHtml = `
+                            <div class="relative h-56 bg-slate-100 overflow-hidden">
+                                <img src="${item.url}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.src='https://placehold.co/600x400/e2e8f0/64748b?text=תמונה+לא+זמינה'">
+                                <button onclick="deleteItem(${index})" class="absolute top-3 left-3 bg-red-600 text-white p-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-700" title="מחק פריט">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+                            </div>
+                        `;
+                    } else {
+                        mediaHtml = `
+                            <div class="relative h-56 bg-slate-900 overflow-hidden">
+                                <iframe src="${item.url}" class="w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                                <button onclick="deleteItem(${index})" class="absolute top-3 left-3 bg-red-600 text-white p-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-700 z-10" title="מחק פריט">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+                            </div>
+                        `;
+                    }
+
+                    const likesCount = item.likes || 0;
+
+                    card.innerHTML = `
+                        ${mediaHtml}
+                        <div class="p-4 flex flex-col gap-3 flex-grow justify-between">
+                            <div class="flex items-center justify-between">
+                                <span class="font-semibold text-slate-800">${item.title}</span>
+                                <span class="text-xs ${item.type === 'image' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'} px-2.5 py-1 rounded-lg font-medium">
+                                    ${item.type === 'image' ? 'תמונה' : 'סרטון'}
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+                                <button onclick="likeItem(${index})" class="flex items-center gap-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 px-3 py-1.5 rounded-xl font-medium text-sm transition-all shadow-sm">
+                                    ❤️ אהבתי
+                                </button>
+                                <span class="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-xl">
+                                    ${likesCount} לייקים
+                                </span>
+                            </div>
+                        </div>
+                    `;
+
+                    contentArea.appendChild(card);
+                });
+            }
+
+            // רינדור רשימת התגובות לדף הנוכחי
+            const commentsContainer = document.getElementById('comments-list');
+            commentsContainer.innerHTML = '';
+
+            if (!currentPage || !currentPage.comments || currentPage.comments.length === 0) {
+                commentsContainer.innerHTML = '<p class="text-slate-400 text-sm text-center py-4">אין עדיין תגובות בדף זה. היה הראשונים להגיב!</p>';
+            } else {
+                currentPage.comments.forEach(comment => {
+                    const commentEl = document.createElement('div');
+                    commentEl.className = 'bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col gap-1';
+                    commentEl.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-slate-800 text-sm">${comment.author}</span>
+                            <span class="text-xs text-slate-400">${comment.date}</span>
+                        </div>
+                        <p class="text-slate-600 text-sm mt-1">${comment.text}</p>
+                    `;
+                    commentsContainer.appendChild(commentEl);
+                });
+            }
+        }
+
+        // טעינת הנתונים והפעלת המערכת בעליית העמוד
+        window.onload = function() {
+            loadData();
+            render();
+        };
+    </script>
+</body>
+</html>
